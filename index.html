@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="D Maain Voice Knowledge Project — An educational initiative in association with the SMART NACOS Public Speaking Track bringing people together to learn, exchange ideas, and develop essential skills. Be The Voice.">
+  <meta name="theme-color" content="#252525">
+  <title>D Maain Voice Knowledge Project — Be The Voice</title>
+
+  <!-- Google Fonts: Manrope (Headings: 600, 700) and DM Sans (Body/UI: 400, 500, 600) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400;1,9..40,500;1,9..40,600&family=Manrope:wght@600;700&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+  <!-- Accessible Skip Link -->
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Top Announcement Bar (Dynamically populated from /api/content) -->
+  <div class="announcement-bar" id="announcement-bar" hidden>
+    <div class="container announcement-container">
+      <span class="announcement-pill">UPDATE</span>
+      <span class="announcement-text" id="announcement-text">Welcome to D Maain Voice Knowledge Project.</span>
+      <a href="#sessions" class="announcement-link" id="announcement-link">Explore Sessions &rarr;</a>
+    </div>
+  </div>
+
+  <!-- Global Header -->
+  <header class="site-header" id="site-header">
+    <div class="header-container">
+      <!-- Brand Logo Container with charcoal background to integrate dark logo seamlessly -->
+      <a href="#home" class="brand-link" aria-label="D Maain Voice Knowledge Project Homepage">
+        <div class="logo-badge" title="D Maain Voice Knowledge Project — Be The Voice">
+          <img src="assets/logos/dmaainvoice_logo.png" alt="D Maain Voice — Be The Voice Logo" class="brand-logo-img"
+            width="170" height="83" loading="eager"
+            onerror="this.parentElement.innerHTML='<span class=\'logo-fallback-text\'><strong>D MAAIN VOICE</strong><br><small>BE THE VOICE</small></span>'">
+        </div>
+      </a>
+
+      <!-- Desktop Navigation -->
+      <nav class="desktop-nav" aria-label="Primary Navigation">
+        <ul class="nav-list">
+          <li><a href="#home" class="nav-link active">Home</a></li>
+          <li><a href="#about" class="nav-link">About</a></li>
+          <li><a href="#sessions" class="nav-link">Sessions</a></li>
+          <li><a href="#facilitators" class="nav-link">Facilitators</a></li>
+          <li><a href="#affiliation" class="nav-link">Affiliation</a></li>
+          <li><a href="#contact" class="nav-link">Contact</a></li>
+          <li><a href="admin.html" class="nav-link nav-link-admin" title="Organizer Portal">Portal</a></li>
+        </ul>
+      </nav>
+
+      <!-- Header Action & Mobile Toggle -->
+      <div class="header-actions">
+        <button type="button" class="btn btn-primary header-cta" id="header-become-participant-btn">Become a
+          Participant</button>
+
+        <button type="button" class="mobile-menu-toggle" id="menu-toggle-btn" aria-expanded="false"
+          aria-controls="mobile-nav" aria-label="Open mobile navigation menu">
+          <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Navigation Drawer -->
+    <div class="mobile-nav-drawer" id="mobile-nav" aria-hidden="true">
+      <div class="mobile-nav-backdrop" id="mobile-nav-backdrop"></div>
+      <div class="mobile-nav-content">
+        <div class="mobile-nav-header">
+          <span class="mobile-nav-eyebrow">NAVIGATION</span>
+          <button type="button" class="mobile-close-btn" id="menu-close-btn" aria-label="Close navigation menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <ul class="mobile-nav-list">
+          <li><a href="#home" class="mobile-nav-link">Home</a></li>
+          <li><a href="#about" class="mobile-nav-link">About Mission</a></li>
+          <li><a href="#sessions" class="mobile-nav-link">Upcoming Sessions</a></li>
+          <li><a href="#facilitators" class="mobile-nav-link">Facilitators</a></li>
+          <li><a href="#affiliation" class="mobile-nav-link">NACOS Affiliation</a></li>
+          <li><a href="#contact" class="mobile-nav-link">Contact & Inquiries</a></li>
+          <li><a href="admin.html" class="mobile-nav-link nav-link-admin">Organizer Portal</a></li>
+        </ul>
+        <div class="mobile-nav-footer">
+          <button type="button" class="btn btn-primary mobile-cta" id="mobile-become-participant-btn">Become a
+            Participant</button>
+          <p class="mobile-tagline">“BE THE VOICE”</p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Landmark -->
+  <main id="main-content">
+
+    <!-- Hero Section -->
+    <section class="hero-section" id="home" aria-labelledby="hero-title">
+      <div class="container hero-container">
+        <div class="hero-content">
+          <div class="eyebrow-container">
+            <span class="eyebrow-tag">KNOWLEDGE · COMMUNITY · GROWTH</span>
+            <span class="tagline-pill">BE THE VOICE</span>
+          </div>
+
+          <h1 id="hero-title" class="hero-title">
+            Every voice has something valuable to share.
+          </h1>
+
+          <p class="hero-lead">
+            D Maain Voice Knowledge Project brings people together to exchange knowledge, explore new ideas, and grow
+            through meaningful learning experiences.
+          </p>
+
+          <div class="hero-actions">
+            <button type="button" class="btn btn-primary" id="hero-become-participant-btn">
+              Become a Participant
+              <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </button>
+            <a href="#sessions" class="btn btn-secondary">Explore Sessions</a>
+          </div>
+
+          <div class="hero-meta-strip">
+            <div class="meta-item">
+              <span class="meta-dot" aria-hidden="true"></span>
+              <span class="meta-label">Affiliated with SMART NACOS Public Speaking Track</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Curated Virtual Sessions</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Editorial Hero Graphic Composition -->
+        <div class="hero-editorial-card" aria-hidden="true">
+          <div class="editorial-card-inner">
+            <div class="editorial-card-header">
+              <span class="editorial-issue">INITIATIVE DISCIPLINE</span>
+              <span class="live-indicator"><span class="pulse"></span> Active Cohort</span>
+            </div>
+
+            <div class="editorial-quote-block">
+              <p class="editorial-quote">
+                “True growth begins when knowledge is shared openly, minds engage with depth, and every individual is
+                empowered to speak with conviction.”
+              </p>
+              <cite class="editorial-cite">— D Maain Voice Charter</cite>
+            </div>
+
+            <div class="hero-pillars-grid">
+              <div class="pillar-tag">Public Speaking</div>
+              <div class="pillar-tag">Emerging Tech</div>
+              <div class="pillar-tag">Career Strategy</div>
+              <div class="pillar-tag">Islamic Finance</div>
+            </div>
+
+            <div class="editorial-footer-bar">
+              <span class="editorial-badge-text">BE THE VOICE</span>
+              <span class="editorial-year">EST. 2026</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Upcoming Sessions Section -->
+    <section class="sessions-section" id="sessions" aria-labelledby="sessions-title">
+      <div class="container">
+        <div class="section-header-block">
+          <div class="section-eyebrow">CURATED LEARNING SESSIONS</div>
+          <h2 id="sessions-title" class="section-title">Knowledge worth showing up for.</h2>
+          <p class="section-lead">
+            Discover conversations and learning experiences designed to help you think, communicate, and grow.
+          </p>
+        </div>
+
+        <!-- Category Filter Tabs -->
+        <div class="sessions-filter-bar" role="tablist" aria-label="Session topic categories">
+          <button type="button" class="filter-tab active" data-category="all" role="tab" aria-selected="true">All
+            Sessions</button>
+          <button type="button" class="filter-tab" data-category="technology" role="tab"
+            aria-selected="false">Technology</button>
+          <button type="button" class="filter-tab" data-category="finance" role="tab" aria-selected="false">Islamic
+            Finance</button>
+          <button type="button" class="filter-tab" data-category="business" role="tab"
+            aria-selected="false">Business</button>
+          <button type="button" class="filter-tab" data-category="personal-development" role="tab"
+            aria-selected="false">Personal Development</button>
+          <button type="button" class="filter-tab" data-category="public-speaking" role="tab"
+            aria-selected="false">Public Speaking</button>
+        </div>
+
+        <!-- Dynamic Sessions Container -->
+        <div class="sessions-grid" id="sessions-container" aria-live="polite">
+          <!-- Populated dynamically by JavaScript -->
+          <noscript>
+            <div class="empty-state-card">
+              <p>JavaScript is required to display the interactive upcoming sessions schedule.</p>
+            </div>
+          </noscript>
+        </div>
+
+        <!-- Empty State Container (Hidden by default, shown when no sessions match) -->
+        <div class="sessions-empty-state" id="sessions-empty-state" hidden>
+          <div class="empty-state-content">
+            <div class="empty-state-icon" aria-hidden="true">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+            <h3 class="empty-state-title">No sessions scheduled in this topic</h3>
+            <p class="empty-state-desc">
+              We are finalizing facilitators for upcoming sessions in this track. Check back shortly or reset your
+              filter to view all active topics.
+            </p>
+            <button type="button" class="btn btn-secondary reset-filter-btn" id="reset-filter-btn">
+              View All Sessions
+            </button>
+          </div>
+        </div>
+
+        <!-- Session Guidance Notice -->
+        <div class="session-transparency-card">
+          <div class="transparency-icon" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+          </div>
+          <div class="transparency-text">
+            <strong>About Participation:</strong> All scheduled sessions are free to attend and hosted virtually.
+            Registration links open 7 days prior to each scheduled date. Attendees receive interactive session links
+            directly to their email.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Mission & About Section -->
+    <section class="mission-section" id="about" aria-labelledby="mission-title">
+      <div class="container">
+        <div class="mission-layout">
+          <div class="mission-intro">
+            <div class="section-eyebrow">OUR REASON FOR BEING</div>
+            <h2 id="mission-title" class="section-title">
+              More than a session.<br>A community that grows together.
+            </h2>
+            <p class="mission-description">
+              D Maain Voice Knowledge Project exists to make useful knowledge accessible, give knowledgeable people a
+              platform to share what they know, and create opportunities for ongoing learning.
+            </p>
+            <p class="mission-description">
+              We believe meaningful growth happens in open, structured forums where curiosity meets practical
+              wisdom—spanning public discourse, technological literacy, ethical business, and personal mastery.
+            </p>
+            <p class="mission-description mission-partner-note">
+              Through partnerships with organisations like <strong>BRENI</strong>, we extend the reach and impact of
+              knowledge-sharing across our community.
+            </p>
+
+            <div class="mission-callout">
+              <span class="callout-tag">OUR MOTTO</span>
+              <p class="callout-text">“BE THE VOICE”</p>
+              <p class="callout-sub">Speak with clarity, learn with humility, and share with purpose.</p>
+            </div>
+          </div>
+
+          <!-- The Three Core Principles -->
+          <div class="principles-container">
+            <div class="principle-card">
+              <div class="principle-number" aria-hidden="true">01</div>
+              <div class="principle-body">
+                <h3 class="principle-heading">Learn</h3>
+                <p class="principle-text">
+                  Explore ideas and skills beyond your everyday routine. Deepen your understanding of communication,
+                  technology, and career disciplines through curated, digestible sessions.
+                </p>
+              </div>
+            </div>
+
+            <div class="principle-card">
+              <div class="principle-number" aria-hidden="true">02</div>
+              <div class="principle-body">
+                <h3 class="principle-heading">Share</h3>
+                <p class="principle-text">
+                  Hear from people with knowledge and experiences worth sharing. We empower both seasoned practitioners
+                  and rising voices to present insights that foster intellectual exchange.
+                </p>
+              </div>
+            </div>
+
+            <div class="principle-card">
+              <div class="principle-number" aria-hidden="true">03</div>
+              <div class="principle-body">
+                <h3 class="principle-heading">Grow</h3>
+                <p class="principle-text">
+                  Build confidence, perspective, and useful connections through continued learning. Develop the poise
+                  and practical tools necessary to excel in academic, civic, and professional life.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Facilitators Section -->
+    <section class="facilitators-section" id="facilitators" aria-labelledby="facilitators-title">
+      <div class="container">
+        <div class="section-header-block">
+          <div class="section-eyebrow">KNOWLEDGE FACILITATORS</div>
+          <h2 id="facilitators-title" class="section-title">Meet the people behind the knowledge.</h2>
+          <p class="section-lead">
+            Facilitators bring their knowledge, experience, and perspectives to each session.
+          </p>
+        </div>
+
+        <!-- Dynamic Facilitators Grid -->
+        <div class="facilitators-grid" id="facilitators-container" aria-live="polite">
+          <!-- Dynamically populated via JavaScript -->
+        </div>
+
+        <!-- Honest Sample Disclaimer & Facilitator Invitation -->
+        <div class="facilitators-disclaimer">
+          <div class="disclaimer-content">
+            <h4 class="disclaimer-title">Facilitator Selection & Schedule Confirmation</h4>
+            <p class="disclaimer-text">
+              Facilitator profiles above represent illustrative sample entries for our upcoming calendar. Confirmed
+              guest facilitators and keynote speakers for each respective topic are published alongside session
+              registrations.
+            </p>
+            <div class="disclaimer-action">
+              <a href="#contact" class="btn btn-secondary btn-sm">Interested in Facilitating a Topic?</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Association & Affiliation Section -->
+    <section class="affiliation-section" id="affiliation" aria-labelledby="affiliation-title">
+      <div class="container">
+        <div class="affiliation-card">
+          <div class="affiliation-brand-col">
+            <div class="nacos-emblem-wrapper" title="Nigerian Association of Computing Students (NACOS)">
+              <img src="assets/logos/nacos_logo.jpg"
+                alt="Nigerian Association of Computing Students (NACOS) Circular Logo" class="nacos-emblem-img"
+                width="160" height="160" loading="lazy"
+                onerror="this.parentElement.innerHTML='<div class=\'nacos-fallback-badge\'>NACOS</div>'">
+            </div>
+            <div class="affiliation-label">
+              <span class="nacos-badge-pill">OFFICIAL COLLABORATION</span>
+            </div>
+          </div>
+
+          <div class="affiliation-info-col">
+            <div class="section-eyebrow nacos-green-accent">COLLABORATION INITIATIVE</div>
+            <h2 id="affiliation-title" class="affiliation-heading">
+              In Association with the SMART NACOS Public Speaking Track
+            </h2>
+            <p class="affiliation-text">
+              D Maain Voice Knowledge Project is proudly associated with the SMART NACOS Public Speaking Track, an
+              educational branch of the Nigerian Association of Computing Students (NACOS).
+            </p>
+            <p class="affiliation-text">
+              Through this collaboration, computing and technical students gain regular exposure to structured public
+              speaking, effective research dissemination, and articulate presentation practice—bridging the gap between
+              technological skill and interpersonal impact.
+            </p>
+            <div class="affiliation-features">
+              <div class="feature-item">
+                <span class="feature-check" aria-hidden="true">✓</span>
+                <span>Tailored communication development for computing students</span>
+              </div>
+              <div class="feature-item">
+                <span class="feature-check" aria-hidden="true">✓</span>
+                <span>Fostering authentic voices and stage confidence</span>
+              </div>
+              <div class="feature-item">
+                <span class="feature-check" aria-hidden="true">✓</span>
+                <span>Bridging technology, ethical leadership, and career growth</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Final Call to Action -->
+    <section class="cta-section" aria-labelledby="cta-title">
+      <div class="container">
+        <div class="cta-inner">
+          <span class="cta-eyebrow">START YOUR LEARNING JOURNEY</span>
+          <h2 id="cta-title" class="cta-title">Your next idea could start here.</h2>
+          <p class="cta-lead">
+            Find a session, discover a new perspective, and be part of a community that values knowledge.
+          </p>
+          <div class="cta-actions">
+            <a href="#sessions" class="btn btn-primary cta-btn">
+              Explore Sessions
+              <svg class="btn-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </a>
+            <a href="#about" class="btn btn-ghost cta-btn-secondary">Read Our Principles</a>
+          </div>
+          <div class="cta-motto">
+            <span class="motto-divider" aria-hidden="true"></span>
+            <span class="motto-text">BE THE VOICE</span>
+            <span class="motto-divider" aria-hidden="true"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Our Partners Section -->
+    <section class="partners-section" id="partners" aria-labelledby="partners-title">
+      <div class="container">
+        <div class="section-header-block partners-header">
+          <div class="section-eyebrow">COLLABORATION &amp; PARTNERSHIP</div>
+          <h2 id="partners-title" class="section-title">Our Partners</h2>
+          <p class="section-lead">
+            We are grateful to work alongside organisations that share our commitment to knowledge, growth, and
+            community development.
+          </p>
+        </div>
+
+        <div class="partners-grid">
+          <div class="partner-card">
+            <div class="partner-logo-wrapper">
+              <img src="assets/logos/breni_logo.jpg" alt="BRENI — Partner of D Maain Voice Knowledge Project"
+                class="partner-logo-img" loading="lazy">
+            </div>
+            <div class="partner-info">
+              <h3 class="partner-name">BRENI</h3>
+              <p class="partner-role">Knowledge Partner</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Global Footer -->
+  <footer class="site-footer" id="contact" aria-label="Site Footer">
+    <div class="container">
+      <div class="footer-top-grid">
+        <!-- Brand Column -->
+        <div class="footer-col footer-col-brand">
+          <div class="footer-logo-badge">
+            <img src="assets/logos/dmaainvoice_logo.png" alt="D Maain Voice — Be The Voice" class="footer-logo-img"
+              width="150" height="74" loading="lazy"
+              onerror="this.parentElement.innerHTML='<span class=\'logo-fallback-text\'><strong>D MAAIN VOICE</strong><br><small>BE THE VOICE</small></span>'">
+          </div>
+          <p class="footer-mission-statement">
+            D Maain Voice Knowledge Project is an educational initiative dedicated to sharing actionable knowledge,
+            empowering public discourse, and elevating curious minds.
+          </p>
+          <p class="footer-tagline">“BE THE VOICE”</p>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="footer-col">
+          <h3 class="footer-heading">Initiative</h3>
+          <ul class="footer-nav">
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About Mission</a></li>
+            <li><a href="#sessions">Upcoming Sessions</a></li>
+            <li><a href="#facilitators">Facilitators</a></li>
+            <li><a href="#affiliation">NACOS Affiliation</a></li>
+          </ul>
+        </div>
+
+        <!-- Knowledge Tracks -->
+        <div class="footer-col">
+          <h3 class="footer-heading">Learning Tracks</h3>
+          <ul class="footer-nav">
+            <li><a href="#sessions" data-filter="public-speaking">Public Speaking & Discourse</a></li>
+            <li><a href="#sessions" data-filter="technology">Software & Emerging Tech</a></li>
+            <li><a href="#sessions" data-filter="career">Career Strategy & Leadership</a></li>
+            <li><a href="#sessions" data-filter="finance">Islamic Finance & Ethics</a></li>
+          </ul>
+        </div>
+
+        <!-- Contact & Inquiries -->
+        <div class="footer-col">
+          <h3 class="footer-heading">Inquiries & Community</h3>
+          <p class="footer-info-text">
+            For session topic recommendations, facilitator inquiries, or institutional collaboration:
+          </p>
+          <div class="footer-contact-box">
+            <span class="contact-channel-label">General Secretariat</span>
+            <span class="contact-channel-val">D Maain Voice Organizing Committee</span>
+            <span class="contact-channel-note">Session announcements are broadcasted through SMART NACOS
+              channels.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Bottom Bar -->
+      <div class="footer-bottom-bar">
+        <p class="copyright-text">
+          &copy; <span id="current-year">2026</span> D Maain Voice Knowledge Project. In association with SMART NACOS
+          Public Speaking Track. All rights reserved.
+        </p>
+        <p class="footer-partner-acknowledgment">
+          In partnership with <strong>BRENI</strong>.
+        </p>
+        <p class="footer-meta-note">
+          Phase 1 Educational Frontend Release.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Accessible Session Details & Registration Modal Dialog -->
+  <dialog class="modal-dialog" id="session-modal" aria-labelledby="modal-session-title">
+    <div class="modal-content-wrapper">
+      <div class="modal-header">
+        <div class="modal-eyebrow-group">
+          <span class="modal-eyebrow" id="modal-session-category">Session Details</span>
+          <span class="modal-status-badge" id="modal-session-badge">UPCOMING</span>
+        </div>
+        <button type="button" class="modal-close-btn" id="modal-close-btn" aria-label="Close session details modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Modal Tab Controls -->
+      <div class="modal-tabs" role="tablist" aria-label="Session modal views">
+        <button type="button" class="modal-tab active" id="modal-tab-overview" role="tab" aria-selected="true"
+          aria-controls="modal-view-overview">Overview</button>
+        <button type="button" class="modal-tab" id="modal-tab-register" role="tab" aria-selected="false"
+          aria-controls="modal-view-register">Register for Free</button>
+      </div>
+
+      <div class="modal-body">
+        <h3 class="modal-title" id="modal-session-title">Session Title</h3>
+
+        <!-- Tab View 1: Overview -->
+        <div class="modal-tab-view" id="modal-view-overview" role="tabpanel" aria-labelledby="modal-tab-overview">
+          <div class="modal-meta-grid">
+            <div class="modal-meta-item">
+              <span class="modal-meta-label">Date & Time</span>
+              <span class="modal-meta-value" id="modal-session-datetime">—</span>
+            </div>
+            <div class="modal-meta-item">
+              <span class="modal-meta-label">Format / Venue</span>
+              <span class="modal-meta-value" id="modal-session-format">Virtual Seminar</span>
+            </div>
+            <div class="modal-meta-item">
+              <span class="modal-meta-label">Lead Facilitator</span>
+              <span class="modal-meta-value" id="modal-session-facilitator">—</span>
+            </div>
+            <div class="modal-meta-item">
+              <span class="modal-meta-label">Seat Availability</span>
+              <span class="modal-meta-value" id="modal-session-status">—</span>
+            </div>
+          </div>
+
+          <div class="modal-description-section">
+            <h4>About this Session</h4>
+            <p id="modal-session-description">—</p>
+          </div>
+
+          <div class="modal-takeaways-section">
+            <h4>What You Will Explore</h4>
+            <ul id="modal-session-takeaways" class="modal-takeaways-list">
+              <!-- Populated via JS -->
+            </ul>
+          </div>
+
+          <div class="modal-notice-box" id="modal-registration-notice">
+            <strong>Participation Details:</strong> All scheduled sessions are free to attend and conducted virtually.
+            Registered participants receive interactive joining credentials directly via email.
+          </div>
+        </div>
+
+        <!-- Tab View 2: Registration Form -->
+        <div class="modal-tab-view" id="modal-view-register" role="tabpanel" aria-labelledby="modal-tab-register"
+          hidden>
+          <div class="registration-form-header">
+            <p class="registration-intro">
+              Reserve your seat for <strong><span id="reg-session-title-placeholder">this session</span></strong>.
+              Participation is free and open to students, emerging professionals, and researchers.
+            </p>
+          </div>
+
+          <!-- Registration Alert Box -->
+          <div class="form-alert" id="reg-form-alert" role="alert" hidden></div>
+
+          <!-- Active Form -->
+          <form id="registration-form" class="registration-form" novalidate>
+            <input type="hidden" id="reg-session-id" name="sessionId">
+
+            <div class="form-group">
+              <label for="reg-full-name" class="form-label">Full Name <span class="required">*</span></label>
+              <input type="text" id="reg-full-name" name="fullName" class="form-input" required autocomplete="name"
+                placeholder="e.g. Amina Bello">
+            </div>
+
+            <div class="form-group">
+              <label for="reg-email" class="form-label">Email Address <span class="required">*</span></label>
+              <input type="email" id="reg-email" name="email" class="form-input" required autocomplete="email"
+                placeholder="name@domain.com">
+              <span class="form-help">Interactive session access coordinates will be sent directly to this
+                address.</span>
+            </div>
+
+            <p class="form-privacy-note">
+              <strong>Registration Consent:</strong> By confirming your seat, you consent to receive virtual joining
+              coordinates and essential schedule updates for this session. This registration does not opt you into
+              general marketing newsletters.
+            </p>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary btn-full" id="reg-submit-btn">
+                <span class="btn-text">Confirm Free Registration</span>
+                <span class="btn-spinner" hidden aria-hidden="true"></span>
+              </button>
+            </div>
+          </form>
+
+          <!-- Success Confirmation Receipt (Hidden initially) -->
+          <div class="registration-success-card" id="reg-success-card" hidden>
+            <div class="success-icon" aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00873E" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <h4 class="success-title">You're Registered!</h4>
+            <p class="success-desc" id="reg-success-message">
+              A confirmation email has been dispatched with session details.
+            </p>
+            <div class="success-details-box">
+              <div class="success-detail-row">
+                <span class="detail-label">Session:</span>
+                <strong id="success-session-title">—</strong>
+              </div>
+              <div class="success-detail-row">
+                <span class="detail-label">Attendee:</span>
+                <span id="success-attendee-name">—</span>
+              </div>
+            </div>
+            <div class="success-actions">
+              <button type="button" class="btn btn-secondary" id="reg-done-btn">Done</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="modal-dismiss-btn">Close</button>
+        <button type="button" class="btn btn-primary" id="modal-switch-register-btn">Register for Session</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Participant Registration Modal (Become a Participant) -->
+  <dialog id="participant-modal" class="modal-dialog" aria-labelledby="participant-modal-title">
+    <div class="modal-content-wrapper">
+      <div class="modal-header">
+        <div class="modal-header-meta">
+          <span class="modal-eyebrow">COMMUNITY MEMBERSHIP</span>
+          <h3 class="modal-title" id="participant-modal-title">Become a Participant</h3>
+        </div>
+        <button type="button" class="modal-close-btn" id="participant-modal-close-btn"
+          aria-label="Close participant registration modal">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Form View -->
+        <div id="participant-view-form">
+          <div class="registration-form-header">
+            <p class="registration-intro">
+              Join the <strong>D Maain Voice Knowledge Project</strong> community. Connect with scholars, emerging
+              professionals, and researchers, and receive priority notifications for all upcoming knowledge sessions.
+            </p>
+          </div>
+
+          <!-- Alert Box -->
+          <div class="form-alert" id="participant-form-alert" role="alert" hidden></div>
+
+          <!-- Form -->
+          <form id="participant-registration-form" class="registration-form" novalidate>
+            <div class="form-group">
+              <label for="part-full-name" class="form-label">Full Name <span class="required">*</span></label>
+              <input type="text" id="part-full-name" name="fullName" class="form-input" required autocomplete="name"
+                placeholder="e.g. Amina Bello">
+            </div>
+
+            <div class="form-group">
+              <label for="part-email" class="form-label">Email Address <span class="required">*</span></label>
+              <input type="email" id="part-email" name="email" class="form-input" required autocomplete="email"
+                placeholder="name@domain.com">
+              <span class="form-help">General announcements, cohort opportunities, and resources will be delivered
+                here.</span>
+            </div>
+
+            <p class="form-privacy-note">
+              <strong>Community Consent:</strong> By joining as a participant, you consent to receive D Maain Voice
+              knowledge updates, learning cohort invitations, and project announcements. You can manage preferences or
+              unsubscribe at any time.
+            </p>
+
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary btn-full" id="part-submit-btn">
+                <span class="btn-text">Join Community as Participant</span>
+                <span class="btn-spinner" hidden aria-hidden="true"></span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Success Confirmation Receipt -->
+        <div class="registration-success-card" id="participant-success-card" hidden>
+          <div class="success-icon" aria-hidden="true">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00873E" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <h4 class="success-title">Welcome to the Community!</h4>
+          <p class="success-desc" id="participant-success-message">
+            You are now officially registered as a participant in the D Maain Voice Knowledge Project.
+          </p>
+          <div class="success-details-box">
+            <div class="success-detail-row">
+              <span class="detail-label">Participant:</span>
+              <strong id="participant-success-name">—</strong>
+            </div>
+            <div class="success-detail-row">
+              <span class="detail-label">Status:</span>
+              <span style="color: #00873E; font-weight: 600;">Active Community Member</span>
+            </div>
+          </div>
+          <div class="modal-notice-box" style="margin-top: 1rem; text-align: left;">
+            <strong>Next Step:</strong> You are now a community participant. When you wish to attend an individual
+            seminar, browse our upcoming sessions and click <em>"Register for Session"</em>.
+          </div>
+          <div class="success-actions"
+            style="margin-top: 1.25rem; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+            <button type="button" class="btn btn-primary" id="participant-browse-sessions-btn">Browse Upcoming
+              Sessions</button>
+            <button type="button" class="btn btn-secondary" id="participant-done-btn">Done</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Toast Notification (Accessible Notification Banner) -->
+  <div id="toast" class="toast-banner" role="status" aria-live="polite" hidden></div>
+
+  <!-- Vanilla JavaScript -->
+  <script src="js/main.js"></script>
+</body>
+
+</html>

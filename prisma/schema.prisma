@@ -1,0 +1,172 @@
+// Prisma Schema for D Maain Voice Knowledge Project
+// Live PostgreSQL Database: Neon (weathered-mud-87895928 / neondb)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SessionStatus {
+  UPCOMING
+  LIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum CampaignStatus {
+  DRAFT
+  SENDING
+  SENT
+  FAILED
+}
+
+enum DeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+  BOUNCED
+}
+
+model Organizer {
+  id           String          @id @default(cuid())
+  email        String          @unique
+  passwordHash String
+  name         String
+  role         String          @default("organizer")
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  sessions     Session[]
+  campaigns    EmailCampaign[]
+
+  @@map("organizers")
+}
+
+model Facilitator {
+  id          String    @id @default(cuid())
+  name        String
+  title       String
+  bio         String
+  photoUrl    String?
+  expertise   String[]
+  linkedinUrl String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  sessions    Session[]
+
+  @@map("facilitators")
+}
+
+model Session {
+  id            String          @id @default(cuid())
+  title         String
+  description   String
+  category      String          @default("technology")
+  takeaways     String[]        @default([])
+  format        String          @default("Virtual Seminar")
+  sessionDate   DateTime
+  endTime       DateTime?
+  timeZone      String          @default("Africa/Lagos")
+  venue         String?
+  meetingLink   String?
+  meetingId     String?
+  passcode      String?
+  capacity      Int?
+  status        SessionStatus   @default(UPCOMING)
+  facilitatorId String?
+  organizerId   String
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  facilitator   Facilitator?    @relation(fields: [facilitatorId], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  organizer     Organizer       @relation(fields: [organizerId], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  registrations Registration[]
+  campaigns     EmailCampaign[]
+
+  @@index([sessionDate])
+  @@index([status])
+  @@index([category])
+  @@map("sessions")
+}
+
+model Participant {
+  id               String          @id @default(cuid())
+  firstName        String
+  lastName         String
+  email            String          @unique
+  phone            String?
+  occupation       String?
+  organization     String?
+  state            String?
+  country          String          @default("Nigeria")
+  consentGiven     Boolean         @default(false)
+  subscribed       Boolean         @default(true)
+  unsubscribeToken String          @unique
+  registeredAt     DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  registrations    Registration[]
+  deliveries       EmailDelivery[]
+
+  @@index([email])
+  @@index([subscribed])
+  @@map("participants")
+}
+
+model Registration {
+  id            String      @id @default(cuid())
+  participantId String
+  sessionId     String
+  registeredAt  DateTime    @default(now())
+  attended      Boolean     @default(false)
+
+  participant   Participant @relation(fields: [participantId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  session       Session     @relation(fields: [sessionId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  @@unique([participantId, sessionId])
+  @@map("registrations")
+}
+
+model EmailCampaign {
+  id          String          @id @default(cuid())
+  subject     String
+  body        String
+  sessionId   String?
+  organizerId String
+  status      CampaignStatus  @default(DRAFT)
+  sentAt      DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  session     Session?        @relation(fields: [sessionId], references: [id], onUpdate: Cascade, onDelete: SetNull)
+  organizer   Organizer       @relation(fields: [organizerId], references: [id], onUpdate: Cascade, onDelete: Restrict)
+  deliveries  EmailDelivery[]
+
+  @@map("email_campaigns")
+}
+
+model EmailDelivery {
+  id            String         @id @default(cuid())
+  campaignId    String
+  participantId String
+  status        DeliveryStatus @default(PENDING)
+  sentAt        DateTime?
+  errorMessage  String?
+
+  campaign      EmailCampaign  @relation(fields: [campaignId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  participant   Participant    @relation(fields: [participantId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+
+  @@unique([campaignId, participantId])
+  @@map("email_deliveries")
+}
+
+model SiteContent {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@map("site_content")
+}

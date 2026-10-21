@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Organizer Portal — D Maain Voice Knowledge Project</title>
+  <meta name="theme-color" content="#252525">
+
+  <!-- Google Fonts: Manrope & DM Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Manrope:wght@600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-body">
+
+  <!-- 1. LOGIN OVERLAY (Shown when not authenticated) -->
+  <div class="auth-wrapper" id="auth-wrapper">
+    <div class="auth-card">
+      <div class="auth-header">
+        <div class="auth-logo-box">
+          <img src="assets/logos/dmaainvoice_logo.png" alt="D Maain Voice Logo" height="42">
+        </div>
+        <span class="auth-tag">ORGANIZER PORTAL</span>
+        <h1 class="auth-title">Sign in to manage cohorts</h1>
+        <p class="auth-subtitle">Authorized secretariat and initiative organizers only.</p>
+      </div>
+
+      <div class="auth-alert" id="auth-alert" role="alert" hidden></div>
+
+      <form id="login-form" class="auth-form" novalidate>
+        <div class="form-group">
+          <label for="login-email" class="form-label">Organizer Email</label>
+          <input type="email" id="login-email" class="form-input" required autocomplete="email" placeholder="admin@dmaainvoice.org">
+        </div>
+        <div class="form-group">
+          <label for="login-password" class="form-label">Password</label>
+          <input type="password" id="login-password" class="form-input" required autocomplete="current-password" placeholder="••••••••••••">
+        </div>
+        <button type="submit" class="btn btn-primary btn-full" id="login-submit-btn">
+          <span class="btn-text">Authenticate & Open Portal</span>
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <a href="/" class="auth-back-link">&larr; Return to Public Website</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. MAIN DASHBOARD SHELL (Shown once authenticated) -->
+  <div class="dashboard-shell" id="dashboard-shell" hidden>
+    
+    <!-- Top Header Navigation -->
+    <header class="dash-topbar">
+      <div class="dash-brand">
+        <a href="/" class="dash-brand-link" title="Visit Public Site">
+          <img src="assets/logos/dmaainvoice_logo.png" alt="D Maain Voice" height="32">
+        </a>
+        <span class="dash-portal-label">PORTAL</span>
+      </div>
+
+      <div class="dash-user-controls">
+        <div class="dash-user-info">
+          <span class="user-name" id="dash-user-name">Organizer</span>
+          <span class="user-role-badge" id="dash-user-role">ADMIN</span>
+        </div>
+        <a href="/" class="btn btn-secondary btn-sm" target="_blank" rel="noopener">Public Website &rarr;</a>
+        <button type="button" class="btn btn-ghost btn-sm" id="btn-logout">Sign Out</button>
+      </div>
+    </header>
+
+    <!-- Dashboard Content Area -->
+    <div class="dash-container">
+      
+      <!-- Side Navigation / Section Tabs -->
+      <nav class="dash-nav" role="tablist" aria-label="Organizer Dashboard Tabs">
+        <button type="button" class="dash-nav-item active" data-tab="overview" role="tab" aria-selected="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          Overview
+        </button>
+        <button type="button" class="dash-nav-item" data-tab="sessions" role="tab" aria-selected="false">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+          Sessions & Calendar
+        </button>
+        <button type="button" class="dash-nav-item" data-tab="facilitators" role="tab" aria-selected="false">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          Facilitators
+        </button>
+        <button type="button" class="dash-nav-item" data-tab="participants" role="tab" aria-selected="false">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+          Registrations & Attendance
+        </button>
+        <button type="button" class="dash-nav-item" data-tab="campaigns" role="tab" aria-selected="false">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          Email Broadcasts
+        </button>
+        <button type="button" class="dash-nav-item" data-tab="content" role="tab" aria-selected="false">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+          Website & Announcements
+        </button>
+      </nav>
+
+      <!-- Main Panels -->
+      <main class="dash-content">
+        
+        <!-- ================= TAB 1: OVERVIEW ================= -->
+        <section class="dash-panel active" id="panel-overview">
+          <div class="panel-header">
+            <div>
+              <span class="panel-eyebrow">DASHBOARD</span>
+              <h2 class="panel-title">Platform Activity Overview</h2>
+            </div>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-refresh-overview">Refresh Data</button>
+          </div>
+
+          <!-- Key Metrics Grid -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <span class="metric-label">Total Registrations</span>
+              <span class="metric-value" id="stat-total-registrations">0</span>
+              <span class="metric-sub" id="stat-attendance-rate">0% attendance rate</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Active Participants</span>
+              <span class="metric-value" id="stat-total-participants">0</span>
+              <span class="metric-sub" id="stat-subscribers">0 subscribed</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Total Sessions</span>
+              <span class="metric-value" id="stat-total-sessions">0</span>
+              <span class="metric-sub" id="stat-upcoming-sessions">0 upcoming</span>
+            </div>
+            <div class="metric-card">
+              <span class="metric-label">Facilitators</span>
+              <span class="metric-value" id="stat-total-facilitators">0</span>
+              <span class="metric-sub">Active faculty</span>
+            </div>
+          </div>
+
+          <!-- Split Recent Activity -->
+          <div class="dash-split-grid">
+            <div class="dash-card">
+              <h3 class="dash-card-title">Recent Registrations</h3>
+              <div class="dash-table-wrapper">
+                <table class="dash-table" id="recent-registrations-table">
+                  <thead>
+                    <tr>
+                      <th>Attendee</th>
+                      <th>Session</th>
+                      <th>Registered</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td colspan="3" class="text-muted text-center">Loading registrations...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="dash-card">
+              <h3 class="dash-card-title">Upcoming Knowledge Sessions</h3>
+              <div class="dash-table-wrapper">
+                <table class="dash-table" id="upcoming-sessions-table">
+                  <thead>
+                    <tr>
+                      <th>Title</th>
+                      <th>Date</th>
+                      <th>Attendees</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td colspan="3" class="text-muted text-center">Loading sessions...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TAB 2: SESSIONS ================= -->
+        <section class="dash-panel" id="panel-sessions" hidden>
+          <div class="panel-header">
+            <div>
+              <span class="panel-eyebrow">CURRICULUM</span>
+              <h2 class="panel-title">Session Management</h2>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-open-create-session">+ Create New Session</button>
+          </div>
+
+          <div class="dash-card">
+            <div class="dash-table-wrapper">
+              <table class="dash-table" id="admin-sessions-table">
+                <thead>
+                  <tr>
+                    <th>Title & Format</th>
+                    <th>Date & Time</th>
+                    <th>Facilitator</th>
+                    <th>Registrations</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td colspan="6" class="text-muted text-center">Loading sessions...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TAB 3: FACILITATORS ================= -->
+        <section class="dash-panel" id="panel-facilitators" hidden>
+          <div class="panel-header">
+            <div>
+              <span class="panel-eyebrow">FACULTY</span>
+              <h2 class="panel-title">Knowledge Facilitators</h2>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-open-create-facilitator">+ Add Facilitator</button>
+          </div>
+
+          <div class="dash-card">
+            <div class="dash-table-wrapper">
+              <table class="dash-table" id="admin-facilitators-table">
+                <thead>
+                  <tr>
+                    <th>Facilitator</th>
+                    <th>Role / Title</th>
+                    <th>Expertise Topics</th>
+                    <th>Sessions</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td colspan="5" class="text-muted text-center">Loading facilitators...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TAB 4: PARTICIPANTS ================= -->
+        <section class="dash-panel" id="panel-participants" hidden>
+          <div class="panel-header">
+            <div>
+              <span class="panel-eyebrow">ATTENDANCE & COHORTS</span>
+              <h2 class="panel-title">Registered Participants</h2>
+            </div>
+            <div class="panel-actions">
+              <input type="text" id="participant-search-input" class="form-input form-input-sm" placeholder="Search attendee...">
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-export-participants">Export CSV</button>
+            </div>
+          </div>
+
+          <div class="dash-card">
+            <div class="dash-table-wrapper">
+              <table class="dash-table" id="admin-participants-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email & Phone</th>
+                    <th>Organization / Role</th>
+                    <th>State</th>
+                    <th>Registered Sessions</th>
+                    <th>Subscribed</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td colspan="6" class="text-muted text-center">Loading participants...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TAB 5: EMAIL CAMPAIGNS ================= -->
+        <section class="dash-panel" id="panel-campaigns" hidden>
+          <div class="panel-header">
+            <div>
+              <span class="panel-eyebrow">COMMUNICATIONS</span>
+              <h2 class="panel-title">Email Announcements</h2>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-open-create-campaign">+ New Broadcast</button>
+          </div>
+
+          <div class="dash-card">
+            <div class="dash-table-wrapper">
+              <table class="dash-table" id="admin-campaigns-table">
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>Audience / Session</th>
+                    <th>Status</th>
+                    <th>Deliveries</th>
+                    <th>Date Sent</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td colspan="6" class="text-muted text-center">Loading campaigns...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ================= TAB 6: WEBSITE CONTENT & ANNOUNCEMENTS ================= -->
+        <section class="dash-panel" id="panel-content" hidden>
+          <div class="panel-header">
+            <div>
+              <span class="panel-eyebrow">CONTENT MANAGEMENT</span>
+              <h2 class="panel-title">Website Content & Announcements</h2>
+            </div>
+            <button type="button" class="btn btn-primary btn-sm" id="btn-save-content">Save Website Changes</button>
+          </div>
+
+          <div class="dash-card" style="max-width: 780px;">
+            <form id="content-form" class="content-cms-form">
+              <h3 class="dash-card-title">Top Announcement Banner</h3>
+              <div class="form-group">
+                <label class="checkbox-label" style="font-weight: 600; margin-bottom: 8px;">
+                  <input type="checkbox" id="cms-announcement-enabled">
+                  <span>Display announcement banner on homepage</span>
+                </label>
+              </div>
+              <div class="form-group">
+                <label for="cms-announcement-text" class="form-label">Announcement Text</label>
+                <input type="text" id="cms-announcement-text" class="form-input">
+              </div>
+              <div class="form-row form-grid-2">
+                <div class="form-group">
+                  <label for="cms-announcement-linktext" class="form-label">Button Text</label>
+                  <input type="text" id="cms-announcement-linktext" class="form-input">
+                </div>
+                <div class="form-group">
+                  <label for="cms-announcement-linkurl" class="form-label">Button Target (e.g. #sessions)</label>
+                  <input type="text" id="cms-announcement-linkurl" class="form-input">
+                </div>
+              </div>
+
+              <hr style="margin: 24px 0; border: none; border-top: 1px solid #E5E2DA;">
+
+              <h3 class="dash-card-title">Editorial Hero Copy</h3>
+              <div class="form-group">
+                <label for="cms-hero-headline" class="form-label">Main Headline</label>
+                <input type="text" id="cms-hero-headline" class="form-input">
+              </div>
+              <div class="form-group">
+                <label for="cms-hero-lead" class="form-label">Lead Subheading</label>
+                <textarea id="cms-hero-lead" class="form-input" rows="3"></textarea>
+              </div>
+
+              <hr style="margin: 24px 0; border: none; border-top: 1px solid #E5E2DA;">
+
+              <h3 class="dash-card-title">Mission Charter Quote</h3>
+              <div class="form-group">
+                <label for="cms-mission-quote" class="form-label">Charter Quote</label>
+                <textarea id="cms-mission-quote" class="form-input" rows="2"></textarea>
+              </div>
+            </form>
+          </div>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL: CREATE / EDIT SESSION -->
+  <dialog class="admin-modal" id="admin-session-modal">
+    <div class="admin-modal-box">
+      <div class="admin-modal-header">
+        <h3 id="session-modal-title">Create Knowledge Session</h3>
+        <button type="button" class="btn-close" id="btn-close-session-modal">&times;</button>
+      </div>
+      <form id="admin-session-form" class="admin-modal-form">
+        <input type="hidden" id="admin-session-id">
+        
+        <div class="form-group">
+          <label for="as-title" class="form-label">Session Title <span class="required">*</span></label>
+          <input type="text" id="as-title" class="form-input" required placeholder="e.g. Mastering Technical Speech Delivery">
+        </div>
+
+        <div class="form-group">
+          <label for="as-description" class="form-label">Description <span class="required">*</span></label>
+          <textarea id="as-description" class="form-input" rows="3" required placeholder="Overview of session curriculum..."></textarea>
+        </div>
+
+        <div class="form-row form-grid-2">
+          <div class="form-group">
+            <label for="as-date" class="form-label">Start Date & Time <span class="required">*</span></label>
+            <input type="datetime-local" id="as-date" class="form-input" required>
+          </div>
+          <div class="form-group">
+            <label for="as-end-date" class="form-label">End Time (Optional)</label>
+            <input type="datetime-local" id="as-end-date" class="form-input">
+          </div>
+        </div>
+
+        <div class="form-row form-grid-2">
+          <div class="form-group">
+            <label for="as-facilitator" class="form-label">Lead Facilitator</label>
+            <select id="as-facilitator" class="form-input">
+              <option value="">-- Unassigned --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="as-capacity" class="form-label">Capacity Limit</label>
+            <input type="number" id="as-capacity" class="form-input" placeholder="e.g. 500">
+          </div>
+        </div>
+
+        <div class="form-row form-grid-2">
+          <div class="form-group">
+            <label for="as-category" class="form-label">Session Category <span class="required">*</span></label>
+            <select id="as-category" class="form-input" required>
+              <option value="technology">Technology</option>
+              <option value="finance">Islamic Finance</option>
+              <option value="business">Business</option>
+              <option value="personal-development">Personal Development</option>
+              <option value="public-speaking">Public Speaking</option>
+              <option value="career">Career &amp; Growth</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="as-status" class="form-label">Status</label>
+            <select id="as-status" class="form-input">
+              <option value="UPCOMING">UPCOMING</option>
+              <option value="LIVE">LIVE</option>
+              <option value="COMPLETED">COMPLETED</option>
+              <option value="CANCELLED">CANCELLED</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="as-venue" class="form-label">Venue / Format Label</label>
+          <input type="text" id="as-venue" class="form-input" placeholder="e.g. Google Meet (Virtual)">
+        </div>
+
+        <!-- Privileged Meeting Coordinates -->
+        <div class="form-group" style="background: #FFFBEB; padding: 12px; border-radius: 6px; border: 1px solid #FDE68A;">
+          <label class="form-label" style="color: #92400E;">Privileged Virtual Coordinates (Sent to confirmed registrants only)</label>
+          <div class="form-row form-grid-2" style="margin-top: 8px;">
+            <input type="url" id="as-meeting-link" class="form-input" placeholder="https://meet.google.com/xyz">
+            <input type="text" id="as-passcode" class="form-input" placeholder="Passcode (if required)">
+          </div>
+        </div>
+
+        <div class="admin-modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-session">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-session">Save Session</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- MODAL: CREATE / EDIT FACILITATOR -->
+  <dialog class="admin-modal" id="admin-facilitator-modal">
+    <div class="admin-modal-box">
+      <div class="admin-modal-header">
+        <h3 id="facilitator-modal-title">Add Knowledge Facilitator</h3>
+        <button type="button" class="btn-close" id="btn-close-facilitator-modal">&times;</button>
+      </div>
+      <form id="admin-facilitator-form" class="admin-modal-form">
+        <input type="hidden" id="admin-facilitator-id">
+
+        <div class="form-row form-grid-2">
+          <div class="form-group">
+            <label for="af-name" class="form-label">Full Name <span class="required">*</span></label>
+            <input type="text" id="af-name" class="form-input" required placeholder="e.g. Dr. Amina Bello">
+          </div>
+          <div class="form-group">
+            <label for="af-title" class="form-label">Professional Title / Role <span class="required">*</span></label>
+            <input type="text" id="af-title" class="form-input" required placeholder="e.g. Principal Researcher">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="af-bio" class="form-label">Biography <span class="required">*</span></label>
+          <textarea id="af-bio" class="form-input" rows="3" required placeholder="Concise bio highlighting background and experience..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="af-expertise" class="form-label">Topics / Expertise (Comma separated)</label>
+          <input type="text" id="af-expertise" class="form-input" placeholder="e.g. Public Speaking, Cloud Architecture, Rhetoric">
+        </div>
+
+        <div class="form-group">
+          <label for="af-linkedin" class="form-label">LinkedIn Profile URL</label>
+          <input type="url" id="af-linkedin" class="form-input" placeholder="https://linkedin.com/in/username">
+        </div>
+
+        <div class="admin-modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-facilitator">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-facilitator">Save Facilitator</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- MODAL: DRAFT CAMPAIGN -->
+  <dialog class="admin-modal" id="admin-campaign-modal">
+    <div class="admin-modal-box">
+      <div class="admin-modal-header">
+        <h3>Draft Email Announcement</h3>
+        <button type="button" class="btn-close" id="btn-close-campaign-modal">&times;</button>
+      </div>
+      <form id="admin-campaign-form" class="admin-modal-form">
+        <div class="form-group">
+          <label for="ac-session" class="form-label">Audience</label>
+          <select id="ac-session" class="form-input">
+            <option value="">All Subscribed Participants (Broadcast)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="ac-subject" class="form-label">Email Subject Line <span class="required">*</span></label>
+          <input type="text" id="ac-subject" class="form-input" required placeholder="e.g. Session Details: Saturday Knowledge Masterclass">
+        </div>
+
+        <div class="form-group">
+          <label for="ac-body" class="form-label">Email Body Content <span class="required">*</span></label>
+          <textarea id="ac-body" class="form-input" rows="6" required placeholder="Write message to attendees..."></textarea>
+        </div>
+
+        <div class="admin-modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-campaign">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-save-campaign">Save Draft</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- Toast Notification -->
+  <div id="admin-toast" class="admin-toast" hidden></div>
+
+  <!-- JavaScript -->
+  <script src="js/admin.js"></script>
+</body>
+</html>

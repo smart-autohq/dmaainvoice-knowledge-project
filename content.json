@@ -1,0 +1,23 @@
+{
+  "announcement": {
+    "enabled": true,
+    "text": "Upcoming Cohort: Interactive Virtual Masterclasses in Technology & Public Speaking are now open.",
+    "linkText": "Explore Sessions",
+    "linkUrl": "#sessions"
+  },
+  "hero": {
+    "eyebrow": "KNOWLEDGE · COMMUNITY · GROWTH",
+    "tagline": "BE THE VOICE",
+    "headline": "Every voice has something valuable to share.",
+    "lead": "D Maain Voice Knowledge Project brings people together to exchange knowledge, explore new ideas, and grow through meaningful learning experiences."
+  },
+  "mission": {
+    "quote": "True growth begins when knowledge is shared openly, minds engage with depth, and every individual is empowered to speak with conviction.",
+    "citation": "— D Maain Voice Charter"
+  },
+  "contact": {
+    "secretariat": "D Maain Voice Organizing Committee",
+    "email": "inquiries@dmaainvoice.org",
+    "notes": "Session announcements are broadcasted through SMART NACOS channels."
+  }
+}
