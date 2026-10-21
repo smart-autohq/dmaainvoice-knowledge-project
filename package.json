@@ -8,6 +8,7 @@
     "start": "node --env-file=.env server.js",
     "postinstall": "prisma generate",
     "build": "prisma generate",
+    "test": "node test-consolidated-routes.mjs",
     "prisma:generate": "prisma generate",
     "organizer:list": "node scripts/manage-organizer.mjs list",
     "organizer:reset-password": "node scripts/manage-organizer.mjs reset-password",

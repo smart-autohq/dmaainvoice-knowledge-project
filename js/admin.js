@@ -171,7 +171,7 @@
      -------------------------------------------------------------------------- */
   async function checkAuthSession() {
     try {
-      const res = await fetch('/api/auth/me');
+      const res = await fetch('/api/auth/me', { credentials: 'same-origin' });
       if (res.ok) {
         const parsed = await parseApiResponse(res, 'Session Validation');
         if (parsed.ok && parsed.data && parsed.data.success && parsed.data.organizer) {
@@ -250,6 +250,7 @@
       try {
         const res = await fetch('/api/auth/login', {
           method: 'POST',
+          credentials: 'same-origin',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
         });
@@ -282,7 +283,7 @@
   if (btnLogout) {
     btnLogout.addEventListener('click', async () => {
       try {
-        await fetch('/api/auth/logout', { method: 'POST' });
+        await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
       } catch (e) {}
       showLoggedOutState();
       showToast('Signed out.');

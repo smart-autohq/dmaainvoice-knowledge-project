@@ -1,9 +1,10 @@
 import loginHandler from '../_handlers/auth/login.js';
 import logoutHandler from '../_handlers/auth/logout.js';
 import meHandler from '../_handlers/auth/me.js';
+import { getCatchAllSegments } from '../_lib/route-path.js';
 
 export default async function handler(req, res) {
-  const { action } = req.query || {};
+  const [action] = getCatchAllSegments(req, 'action', '/api/auth/');
 
   switch (action) {
     case 'login':

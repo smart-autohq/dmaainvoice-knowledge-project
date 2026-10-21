@@ -7,12 +7,10 @@ import registrationDetailHandler from '../_handlers/admin/registration-detail.js
 import campaignsHandler from '../_handlers/admin/campaigns.js';
 import campaignSendHandler from '../_handlers/admin/campaign-send.js';
 import contentHandler from '../_handlers/admin/content.js';
+import { getCatchAllSegments } from '../_lib/route-path.js';
 
 export default async function handler(req, res) {
-  const rawSlug = req.query.slug;
-  const segments = Array.isArray(rawSlug)
-    ? rawSlug
-    : (typeof rawSlug === 'string' ? rawSlug.split('/').filter(Boolean) : []);
+  const segments = getCatchAllSegments(req, 'slug', '/api/admin/');
 
   const resource = segments[0] || '';
 
