@@ -1,5 +1,5 @@
-import { prisma } from '../_lib/prisma.js';
-import { withAuth } from '../_lib/auth.js';
+import { prisma } from '../../_lib/prisma.js';
+import { withAuth } from '../../_lib/auth.js';
 import fs from 'fs/promises';
 import path from 'path';
 

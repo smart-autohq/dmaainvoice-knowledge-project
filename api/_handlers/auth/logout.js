@@ -1,4 +1,4 @@
-import { clearAuthCookie } from '../_lib/auth.js';
+import { clearAuthCookie } from '../../_lib/auth.js';
 
 export default function handler(req, res) {
   if (req.method !== 'POST') {

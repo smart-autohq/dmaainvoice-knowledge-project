@@ -138,30 +138,32 @@ async function handleApiRequest(req, res, pathname, query) {
   }
 
   // Resolve API handler file
-  const relativeApi = pathname.replace(/^\/api\/?/, '');
+  let effectivePathname = pathname;
+  if (effectivePathname === '/api/join') {
+    effectivePathname = '/api/participants';
+  }
+
+  const relativeApi = effectivePathname.replace(/^\/api\/?/, '');
   const segments = relativeApi.split('/').filter(Boolean);
 
   let handlerModule = null;
+  const candidatePaths = [];
 
-  // 1. Direct match: api/sessions/index.js or api/register.js
-  const candidatePaths = [
-    path.join(__dirname, 'api', ...segments, 'index.js'),
-    path.join(__dirname, 'api', ...segments) + '.js',
-  ];
-
-  // Dynamic route matches: [id].js
-  if (segments.length === 2 && segments[0] === 'sessions') {
+  // Dynamic route matches
+  if (segments[0] === 'admin') {
+    candidatePaths.push(path.join(__dirname, 'api', 'admin', '[...slug].js'));
+    req.query.slug = segments.slice(1);
+  } else if (segments[0] === 'auth' && segments.length >= 2) {
+    candidatePaths.push(path.join(__dirname, 'api', 'auth', '[action].js'));
+    req.query.action = segments[1];
+  } else if (segments.length === 2 && segments[0] === 'sessions') {
     candidatePaths.push(path.join(__dirname, 'api', 'sessions', '[id].js'));
     req.query.id = segments[1];
-  } else if (segments.length === 3 && segments[0] === 'admin' && segments[1] === 'sessions') {
-    candidatePaths.push(path.join(__dirname, 'api', 'admin', 'sessions', '[id].js'));
-    req.query.id = segments[2];
-  } else if (segments.length === 3 && segments[0] === 'admin' && segments[1] === 'registrations') {
-    candidatePaths.push(path.join(__dirname, 'api', 'admin', 'registrations', '[id].js'));
-    req.query.id = segments[2];
-  } else if (segments.length === 4 && segments[0] === 'admin' && segments[1] === 'campaigns' && segments[3] === 'send') {
-    candidatePaths.push(path.join(__dirname, 'api', 'admin', 'campaigns', '[id]', 'send.js'));
-    req.query.id = segments[2];
+  } else {
+    candidatePaths.push(
+      path.join(__dirname, 'api', ...segments, 'index.js'),
+      path.join(__dirname, 'api', ...segments) + '.js'
+    );
   }
 
   for (const candidate of candidatePaths) {

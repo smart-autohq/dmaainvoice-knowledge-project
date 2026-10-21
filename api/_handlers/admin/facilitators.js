@@ -1,5 +1,5 @@
-import { prisma } from '../_lib/prisma.js';
-import { withAuth } from '../_lib/auth.js';
+import { prisma } from '../../_lib/prisma.js';
+import { withAuth } from '../../_lib/auth.js';
 
 async function handler(req, res) {
   if (req.method === 'GET') {

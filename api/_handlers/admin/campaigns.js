@@ -1,6 +1,6 @@
-import { prisma } from '../_lib/prisma.js';
-import { withAuth } from '../_lib/auth.js';
-import { sendEmail } from '../_lib/mailer.js';
+import { prisma } from '../../_lib/prisma.js';
+import { withAuth } from '../../_lib/auth.js';
+import { sendEmail } from '../../_lib/mailer.js';
 
 async function handler(req, res) {
   if (req.method === 'GET') {

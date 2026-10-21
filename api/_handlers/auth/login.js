@@ -1,5 +1,5 @@
-import { prisma, withPrismaRetry } from '../_lib/prisma.js';
-import { comparePassword, signToken, createAuthCookie } from '../_lib/auth.js';
+import { prisma, withPrismaRetry } from '../../_lib/prisma.js';
+import { comparePassword, signToken, createAuthCookie } from '../../_lib/auth.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {

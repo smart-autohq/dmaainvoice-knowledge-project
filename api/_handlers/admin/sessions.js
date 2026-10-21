@@ -1,6 +1,6 @@
-import { prisma } from '../_lib/prisma.js';
-import { withAuth } from '../_lib/auth.js';
-import { getCategoryLabel } from '../_lib/categories.js';
+import { prisma } from '../../_lib/prisma.js';
+import { withAuth } from '../../_lib/auth.js';
+import { getCategoryLabel } from '../../_lib/categories.js';
 
 async function handler(req, res) {
   if (req.method === 'GET') {
