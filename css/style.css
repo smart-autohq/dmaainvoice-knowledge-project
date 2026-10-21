@@ -1484,6 +1484,25 @@ h1, h2, h3, h4 {
   margin-bottom: 4px;
 }
 
+.partner-name a,
+.mission-partner-note a {
+  color: inherit;
+}
+
+.partner-website-link {
+  display: inline-block;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  margin-bottom: 4px;
+}
+
+.partner-website-link:hover,
+.partner-website-link:focus-visible,
+.mission-partner-note a:hover,
+.mission-partner-note a:focus-visible {
+  color: var(--color-charcoal);
+}
+
 .partner-role {
   font-size: 0.8125rem;
   font-weight: var(--fw-medium);
