@@ -1593,15 +1593,35 @@
     });
   }
 
-  // Participant Registration ("Become a Participant") CTA listeners
+  function closeMobileNav() {
+    if (mobileNav) mobileNav.classList.remove('is-open');
+    if (menuToggleBtn) menuToggleBtn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  function scrollToSessionsSection(e) {
+    if (e && typeof e.preventDefault === 'function') {
+      e.preventDefault();
+    }
+    closeMobileNav();
+    const sessionsSection = document.getElementById('sessions');
+    if (sessionsSection) {
+      sessionsSection.scrollIntoView({ behavior: 'smooth' });
+      if (history.pushState) {
+        history.pushState(null, '', '#sessions');
+      }
+    }
+  }
+
+  // "Become a Participant" CTAs scroll participant to sessions calendar to choose and register
   if (headerBecomeParticipantBtn) {
-    headerBecomeParticipantBtn.addEventListener('click', openParticipantModal);
+    headerBecomeParticipantBtn.addEventListener('click', scrollToSessionsSection);
   }
   if (mobileBecomeParticipantBtn) {
-    mobileBecomeParticipantBtn.addEventListener('click', openParticipantModal);
+    mobileBecomeParticipantBtn.addEventListener('click', scrollToSessionsSection);
   }
   if (heroBecomeParticipantBtn) {
-    heroBecomeParticipantBtn.addEventListener('click', openParticipantModal);
+    heroBecomeParticipantBtn.addEventListener('click', scrollToSessionsSection);
   }
   if (participantModalCloseBtn) {
     participantModalCloseBtn.addEventListener('click', closeParticipantModal);
