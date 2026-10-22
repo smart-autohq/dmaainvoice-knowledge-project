@@ -290,6 +290,8 @@ h1, h2, h3, h4 {
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-border);
   height: var(--header-height);
+  /* Clip anything that would otherwise leak below/outside the header bar */
+  overflow: hidden;
   transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
 
@@ -305,32 +307,52 @@ h1, h2, h3, h4 {
   gap: clamp(0.5rem, 2vw, 1.5rem);
 }
 
-/* Brand link — transparent logo sits directly on the header background */
+/* Brand link — wraps the charcoal logo badge */
 .brand-link {
   display: inline-flex;
   align-items: center;
   text-decoration: none;
+  /* Never let the logo link shrink and push other items out */
   flex-shrink: 0;
 }
 
-/* Logo badge: no background — transparent PNG no longer needs the charcoal wrapper */
+/*
+  Logo badge: charcoal background is intentional — the logo artwork uses
+  white text and a yellow icon designed for dark backgrounds.
+  The badge is kept compact so it always fits within --header-height.
+*/
 .logo-badge {
+  background-color: var(--color-charcoal);
+  /* Vertical padding uses clamp: 4px on tiny phones, 6px on normal mobile/desktop */
+  padding: clamp(4px, 1vw, 6px) clamp(8px, 2vw, 14px);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform var(--transition-fast), opacity var(--transition-fast);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+  /* Ensure the badge never exceeds the header height minus 16px breathing room */
+  max-height: calc(var(--header-height) - 16px);
+  overflow: hidden;
 }
 
 .logo-badge:hover {
   transform: translateY(-1px);
-  opacity: 0.88;
+  border-color: var(--color-yellow);
 }
 
 .brand-logo-img {
-  /* Fluid height: comfortable on desktop, compact on mobile */
-  height: clamp(32px, 5vw, 44px);
+  /*
+    Fluid height that scales with viewport but is capped so the badge
+    always sits inside the header without overflowing:
+    - 320px viewport → ~32px
+    - 375–768px → scales with 5vw
+    - Desktop → capped at 40px (badge + padding = ~52px, well inside 64–80px header)
+  */
+  height: clamp(28px, 5vw, 40px);
   width: auto;
-  max-width: min(180px, 42vw);
+  /* Hard cap on width prevents an unusually wide image from causing overflow */
+  max-width: min(160px, 38vw);
   object-fit: contain;
   display: block;
 }
@@ -1927,11 +1949,6 @@ h1, h2, h3, h4 {
     display: flex;
     /* Ensure toggle never shrinks below its tap target */
     flex-shrink: 0;
-  }
-
-  /* Prevent header children from overflowing the viewport */
-  .header-container {
-    overflow: hidden;
   }
 
   /* Force single column so minmax(320px) never exceeds viewport */
