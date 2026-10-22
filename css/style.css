@@ -290,8 +290,6 @@ h1, h2, h3, h4 {
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-border);
   height: var(--header-height);
-  /* Clip anything that would otherwise leak below/outside the header bar */
-  overflow: hidden;
   transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
 
@@ -1884,10 +1882,16 @@ h1, h2, h3, h4 {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
   border-left: 4px solid var(--color-yellow);
   z-index: 3000;
-  display: flex;
+  /* display is intentionally omitted here — the HTML `hidden` attribute
+     controls visibility. display:flex is applied only when visible below. */
   align-items: center;
   gap: var(--space-sm);
   animation: toastFadeIn 0.25s ease-out;
+}
+
+/* Only apply flex layout when the toast is actually visible */
+.toast-banner:not([hidden]) {
+  display: flex;
 }
 
 @keyframes toastFadeIn {
