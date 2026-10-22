@@ -7,6 +7,7 @@ import registrationDetailHandler from '../_handlers/admin/registration-detail.js
 import campaignsHandler from '../_handlers/admin/campaigns.js';
 import campaignSendHandler from '../_handlers/admin/campaign-send.js';
 import contentHandler from '../_handlers/admin/content.js';
+import questionsHandler from '../_handlers/admin/questions.js';
 import { getCatchAllSegments } from '../_lib/route-path.js';
 
 export default async function handler(req, res) {
@@ -64,6 +65,11 @@ export default async function handler(req, res) {
   // 7. Content: /api/admin/content (GET, PUT)
   if (resource === 'content' && segments.length === 1) {
     return contentHandler(req, res);
+  }
+
+  // 8. Questions Configuration: /api/admin/questions (GET, PUT)
+  if (resource === 'questions' && segments.length === 1) {
+    return questionsHandler(req, res);
   }
 
   return res.status(404).json({

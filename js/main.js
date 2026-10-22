@@ -15,6 +15,9 @@
   let liveFacilitators = [];
   let activeCategory = 'all';
   let activeModalSession = null;
+  let activeSessionSchema = null;
+  let currentStepIndex = 0;
+  let registrationAnswers = {};
   let lastFocusedElement = null;
 
   /* --------------------------------------------------------------------------
@@ -67,12 +70,19 @@
   const registrationForm = document.getElementById('registration-form');
   const regSessionIdInput = document.getElementById('reg-session-id');
   const regSessionTitlePlaceholder = document.getElementById('reg-session-title-placeholder');
+  const regProgressWrapper = document.getElementById('reg-progress-wrapper');
+  const regStepIndicators = document.getElementById('reg-step-indicators');
+  const regStepFill = document.getElementById('reg-step-fill');
+  const regStepContent = document.getElementById('reg-step-content');
+  const regPrevBtn = document.getElementById('reg-prev-btn');
+  const regNextBtn = document.getElementById('reg-next-btn');
   const regFormAlert = document.getElementById('reg-form-alert');
   const regSubmitBtn = document.getElementById('reg-submit-btn');
   const regSuccessCard = document.getElementById('reg-success-card');
   const regSuccessMessage = document.getElementById('reg-success-message');
   const successSessionTitle = document.getElementById('success-session-title');
   const successAttendeeName = document.getElementById('success-attendee-name');
+  const successSessionMeta = document.getElementById('success-session-meta');
   const regDoneBtn = document.getElementById('reg-done-btn');
 
   // Participant Registration (Become a Participant)
@@ -441,12 +451,12 @@
       if (modalSwitchRegisterBtn) modalSwitchRegisterBtn.style.display = 'none';
 
       // Focus first input
-      const firstInput = document.getElementById('reg-full-name');
+      const firstInput = regStepContent ? regStepContent.querySelector('input, textarea, select') : null;
       if (firstInput) setTimeout(() => firstInput.focus(), 100);
     }
   }
 
-  function openSessionModal(sessionId, initialTab = 'overview') {
+  async function openSessionModal(sessionId, initialTab = 'overview') {
     const session = liveSessions.find(s => s.id === sessionId);
     if (!session || !sessionModal) return;
 
@@ -508,6 +518,9 @@
 
     switchModalTab(initialTab);
 
+    // Fetch and initialize dynamic registration questions
+    loadSessionQuestions(session.id);
+
     // Native HTML5 dialog show
     if (typeof sessionModal.showModal === 'function') {
       sessionModal.showModal();
@@ -532,14 +545,609 @@
       lastFocusedElement.focus();
     }
     activeModalSession = null;
+    activeSessionSchema = null;
   }
 
   /* --------------------------------------------------------------------------
-     7. REGISTRATION FORM SUBMISSION
+     7. MULTI-STEP DATA-DRIVEN REGISTRATION ENGINE
+     -------------------------------------------------------------------------- */
+  async function loadSessionQuestions(sessionId) {
+    if (regStepContent) {
+      regStepContent.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--color-muted);"><span class="btn-spinner" style="display:inline-block; margin-right: 8px;"></span>Loading registration details...</div>';
+    }
+
+    try {
+      const res = await fetch(`/api/questions?sessionId=${encodeURIComponent(sessionId)}`);
+      const parsed = await parseApiResponse(res, 'Session Questions Schema');
+      const schemaData = (parsed && parsed.data && (parsed.data.data || parsed.data)) || null;
+
+      if (parsed && parsed.ok && schemaData && Array.isArray(schemaData.steps) && schemaData.steps.length > 0) {
+        activeSessionSchema = schemaData;
+      } else {
+        // Fallback schema if API fails
+        activeSessionSchema = getDefaultRegistrationSchema(activeModalSession);
+      }
+    } catch (err) {
+      console.warn('Using default registration schema fallback:', err.message);
+      activeSessionSchema = getDefaultRegistrationSchema(activeModalSession);
+    }
+
+    initMultiStepRegistration();
+  }
+
+  function getDefaultRegistrationSchema(session) {
+    const cat = (session?.category || '').toLowerCase();
+    const customQuestions = [];
+    if (cat === 'finance' || cat === 'islamic-finance' || cat === 'islamic finance') {
+      customQuestions.push({
+        id: 'q_finance_familiarity',
+        label: 'Level of Familiarity with Islamic Finance & Ethical Wealth',
+        type: 'radio',
+        helperText: 'Select the option that best reflects your current knowledge.',
+        required: true,
+        options: [
+          'Beginner — Completely new to Halal & Islamic finance concepts',
+          'Intermediate — Familiar with core principles (avoiding Riba, Gharar, and Maisir)',
+          'Advanced — Actively investing in or managing Shariah-compliant assets'
+        ]
+      });
+      customQuestions.push({
+        id: 'q_finance_interests',
+        label: 'Which Halal Wealth topics are you most eager to explore?',
+        type: 'checkbox',
+        helperText: 'Select all areas of interest that apply.',
+        required: false,
+        allowOther: true,
+        options: [
+          'Halal Equities Screening & Shariah Stock Criteria',
+          'Sukuk (Islamic Fixed Income Bonds) & Sovereign Issues',
+          'Ethical Real Estate & Asset-Backed Financing',
+          'Takaful (Islamic Cooperative Insurance) Models',
+          'Zakat Calculation, Purification & Islamic Wealth Planning'
+        ]
+      });
+      customQuestions.push({
+        id: 'q_giveaway',
+        label: 'Would you like to participate in the interactive session airtime giveaway?',
+        type: 'radio',
+        helperText: 'Active live participants qualify for special cohort airtime rewards.',
+        required: true,
+        options: ['Yes', 'No']
+      });
+      customQuestions.push({
+        id: 'q_giveaway_details',
+        label: 'Giveaway Phone Number & Network Provider',
+        type: 'text',
+        placeholder: 'e.g. 08031234567 - MTN',
+        helperText: 'Please provide the number and telecom network to receive the airtime.',
+        required: true,
+        dependsOn: { questionId: 'q_giveaway', value: 'Yes' }
+      });
+      customQuestions.push({
+        id: 'q_facilitator_qa',
+        label: 'Specific Question for the Facilitator',
+        type: 'textarea',
+        placeholder: 'What question or real-world scenario would you like the facilitator to address?',
+        helperText: 'Curated questions will be prioritized during the dedicated Q&A session.',
+        required: false
+      });
+    }
+
+    const steps = [
+      {
+        id: 'step_profile',
+        title: 'Participant Profile',
+        subtitle: 'Basic details for communication & event coordinates',
+        questions: [
+          { id: 'fullName', label: 'Full Name', type: 'text', placeholder: 'e.g. Amina Bello', required: true },
+          { id: 'email', label: 'Email Address', type: 'email', placeholder: 'name@domain.com', required: true },
+          { id: 'phone', label: 'WhatsApp / Mobile Number', type: 'tel', placeholder: '+234 803 123 4567', required: true },
+          { id: 'occupation', label: 'Occupation / Field of Practice', type: 'text', placeholder: 'e.g. Software Engineer, Student', required: false },
+          { id: 'organization', label: 'Organization / Institution', type: 'text', placeholder: 'e.g. University of Lagos', required: false },
+          { id: 'state', label: 'State of Residence', type: 'text', placeholder: 'e.g. Lagos, Abuja', required: false },
+        ],
+      }
+    ];
+
+    if (customQuestions.length > 0) {
+      steps.push({
+        id: 'step_questions',
+        title: 'Session & Track Focus',
+        subtitle: `Specific questions for the ${getCategoryLabel(session?.category)} track`,
+        questions: customQuestions,
+      });
+    }
+
+    steps.push({
+      id: 'step_review',
+      title: 'Review & Confirmation',
+      subtitle: 'Confirm your registration details before submitting',
+      questions: [],
+    });
+
+    return {
+      session: {
+        id: session?.id || '',
+        title: session?.title || 'Session',
+        category: session?.category || 'general',
+        facilitator: session?.facilitator || null,
+      },
+      steps,
+    };
+  }
+
+  function initMultiStepRegistration() {
+    currentStepIndex = 0;
+    registrationAnswers = {};
+
+    renderStepIndicators();
+    renderCurrentStepView();
+  }
+
+  function renderStepIndicators() {
+    if (!regStepIndicators || !activeSessionSchema || !activeSessionSchema.steps) return;
+
+    const steps = activeSessionSchema.steps;
+    regStepIndicators.innerHTML = steps.map((step, idx) => {
+      let statusClass = '';
+      if (idx === currentStepIndex) statusClass = 'active';
+      else if (idx < currentStepIndex) statusClass = 'completed';
+
+      let shortLabel = (step.title || '').split(' ')[0];
+      if (step.id === 'step_questions') shortLabel = 'Track Focus';
+      else if (step.id === 'step_profile') shortLabel = 'Participant';
+      else if (step.id === 'step_review') shortLabel = 'Review';
+
+      return `
+        <div class="step-indicator-item ${statusClass}">
+          <div class="step-circle">${idx < currentStepIndex ? '✓' : idx + 1}</div>
+          <span class="step-label">${escapeHTML(shortLabel)}</span>
+        </div>
+      `;
+    }).join('');
+
+    if (regStepFill) {
+      const progressPercent = ((currentStepIndex + 1) / steps.length) * 100;
+      regStepFill.style.width = `${progressPercent}%`;
+    }
+  }
+
+  function renderCurrentStepView() {
+    if (!regStepContent || !activeSessionSchema || !activeSessionSchema.steps) return;
+
+    if (regFormAlert) regFormAlert.hidden = true;
+
+    const step = activeSessionSchema.steps[currentStepIndex];
+    const isReviewStep = currentStepIndex === activeSessionSchema.steps.length - 1;
+
+    // Header
+    let html = `
+      <div class="step-header">
+        <h4 class="step-title">${escapeHTML(step.title)}</h4>
+        <p class="step-subtitle">${escapeHTML(step.subtitle)}</p>
+      </div>
+    `;
+
+    if (isReviewStep) {
+      html += renderReviewStepView();
+    } else {
+      html += `
+        <div class="questions-list" style="display: flex; flex-direction: column; gap: var(--space-md);">
+          ${step.questions.map(q => renderQuestionField(q, registrationAnswers[q.id])).join('')}
+        </div>
+      `;
+    }
+
+    regStepContent.innerHTML = html;
+
+    // Setup conditionality listeners
+    if (!isReviewStep) {
+      setupConditionalFields(step.questions);
+      // Focus first input
+      const firstInput = regStepContent.querySelector('input, textarea, select');
+      if (firstInput) setTimeout(() => firstInput.focus(), 80);
+    }
+
+    // Update navigation buttons
+    if (regPrevBtn) {
+      regPrevBtn.style.display = currentStepIndex > 0 ? 'inline-flex' : 'none';
+    }
+    if (regNextBtn) {
+      regNextBtn.style.display = isReviewStep ? 'none' : 'inline-flex';
+    }
+    if (regSubmitBtn) {
+      regSubmitBtn.style.display = isReviewStep ? 'inline-flex' : 'none';
+    }
+  }
+
+  function renderQuestionField(q, currentValue) {
+    const isConditional = !!q.dependsOn;
+    let initialHidden = false;
+
+    if (isConditional) {
+      const parentVal = registrationAnswers[q.dependsOn.questionId];
+      const expected = q.dependsOn.value;
+      const isMet = Array.isArray(parentVal) ? parentVal.includes(expected) : parentVal === expected;
+      if (!isMet) initialHidden = true;
+    }
+
+    let inputMarkup = '';
+    const qId = escapeHTML(q.id);
+
+    switch (q.type) {
+      case 'textarea':
+        inputMarkup = `
+          <textarea id="q_${qId}" name="${qId}" class="form-input" rows="3"
+            placeholder="${escapeHTML(q.placeholder || '')}">${escapeHTML(currentValue || '')}</textarea>
+        `;
+        break;
+
+      case 'radio':
+        inputMarkup = `
+          <div class="choice-cards-group" role="radiogroup" aria-labelledby="lbl_${qId}">
+            ${(q.options || []).map((opt, i) => {
+              const optVal = typeof opt === 'object' ? opt.value : opt;
+              const optLabel = typeof opt === 'object' ? opt.label : opt;
+              const isChecked = currentValue === optVal;
+              return `
+                <label class="choice-card-label ${isChecked ? 'selected' : ''}">
+                  <input type="radio" name="${qId}" value="${escapeHTML(optVal)}" ${isChecked ? 'checked' : ''} ${q.required ? 'required' : ''}>
+                  <span>${escapeHTML(optLabel)}</span>
+                </label>
+              `;
+            }).join('')}
+          </div>
+        `;
+        break;
+
+      case 'checkbox':
+        const checkedList = Array.isArray(currentValue) ? currentValue : (currentValue ? [currentValue] : []);
+        const otherChecked = checkedList.some(v => v.startsWith('Other: '));
+        const otherText = otherChecked ? checkedList.find(v => v.startsWith('Other: ')).replace(/^Other:\s*/, '') : '';
+
+        inputMarkup = `
+          <div class="choice-cards-group">
+            ${(q.options || []).map((opt, i) => {
+              const optVal = typeof opt === 'object' ? opt.value : opt;
+              const optLabel = typeof opt === 'object' ? opt.label : opt;
+              const isChecked = checkedList.includes(optVal);
+              return `
+                <label class="choice-card-label ${isChecked ? 'selected' : ''}">
+                  <input type="checkbox" name="${qId}" value="${escapeHTML(optVal)}" ${isChecked ? 'checked' : ''}>
+                  <span>${escapeHTML(optLabel)}</span>
+                </label>
+              `;
+            }).join('')}
+            ${q.allowOther ? `
+              <div class="other-choice-wrapper" style="margin-top: 4px;">
+                <label class="choice-card-label ${otherChecked ? 'selected' : ''}">
+                  <input type="checkbox" class="other-checkbox-toggle" data-qid="${qId}" ${otherChecked ? 'checked' : ''}>
+                  <span>Other (Please specify)</span>
+                </label>
+                <div class="other-input-box" style="margin-top: 6px; padding-left: 1.5rem; ${otherChecked ? '' : 'display: none;'}">
+                  <input type="text" class="form-input other-writein-input" data-qid="${qId}"
+                    placeholder="Enter other details..." value="${escapeHTML(otherText)}">
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        `;
+        break;
+
+      case 'select':
+        inputMarkup = `
+          <select id="q_${qId}" name="${qId}" class="form-input">
+            <option value="">— Select an option —</option>
+            ${(q.options || []).map(opt => {
+              const optVal = typeof opt === 'object' ? opt.value : opt;
+              const optLabel = typeof opt === 'object' ? opt.label : opt;
+              return `<option value="${escapeHTML(optVal)}" ${currentValue === optVal ? 'selected' : ''}>${escapeHTML(optLabel)}</option>`;
+            }).join('')}
+          </select>
+        `;
+        break;
+
+      case 'rating':
+        inputMarkup = `
+          <div class="rating-scale-group" data-qid="${qId}">
+            <input type="hidden" name="${qId}" id="q_${qId}" value="${escapeHTML(currentValue || '')}">
+            ${[1, 2, 3, 4, 5].map(n => `
+              <button type="button" class="rating-btn ${String(currentValue) === String(n) ? 'active' : ''}" data-val="${n}">${n}</button>
+            `).join('')}
+          </div>
+        `;
+        break;
+
+      default: // text, email, tel
+        inputMarkup = `
+          <input type="${q.type || 'text'}" id="q_${qId}" name="${qId}" class="form-input"
+            value="${escapeHTML(currentValue || '')}"
+            placeholder="${escapeHTML(q.placeholder || '')}"
+            ${q.required ? 'required' : ''}
+            autocomplete="${q.type === 'email' ? 'email' : (q.type === 'tel' ? 'tel' : 'on')}">
+        `;
+    }
+
+    return `
+      <div class="question-field ${initialHidden ? 'conditional-hidden' : ''}" id="field_${qId}"
+        ${isConditional ? `data-depends-on="${escapeHTML(q.dependsOn.questionId)}" data-depends-val="${escapeHTML(q.dependsOn.value)}"` : ''}>
+        <label id="lbl_${qId}" for="q_${qId}" class="question-label">
+          ${escapeHTML(q.label)} ${q.required ? '<span class="required" aria-hidden="true">*</span>' : '<span class="optional">(Optional)</span>'}
+        </label>
+        ${q.helperText ? `<span class="question-helper">${escapeHTML(q.helperText)}</span>` : ''}
+        ${inputMarkup}
+      </div>
+    `;
+  }
+
+  function setupConditionalFields(questions) {
+    if (!regStepContent) return;
+
+    // 1. Radio / Checkbox styling and conditionality
+    regStepContent.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(input => {
+      input.addEventListener('change', () => {
+        // Update label card highlight
+        const parentGroup = input.closest('.choice-cards-group');
+        if (parentGroup) {
+          parentGroup.querySelectorAll('.choice-card-label').forEach(lbl => {
+            const radioOrBox = lbl.querySelector('input');
+            if (radioOrBox && radioOrBox.checked) {
+              lbl.classList.add('selected');
+            } else {
+              lbl.classList.remove('selected');
+            }
+          });
+        }
+
+        // Check if any conditional fields depend on this
+        const qName = input.name;
+        const val = input.value;
+        const dependents = regStepContent.querySelectorAll(`[data-depends-on="${qName}"]`);
+
+        dependents.forEach(dep => {
+          const reqVal = dep.getAttribute('data-depends-val');
+          if (input.checked && val === reqVal) {
+            dep.classList.remove('conditional-hidden');
+          } else if (input.type === 'radio' && input.checked && val !== reqVal) {
+            dep.classList.add('conditional-hidden');
+          }
+        });
+      });
+    });
+
+    // 2. Rating Scale buttons
+    regStepContent.querySelectorAll('.rating-scale-group').forEach(group => {
+      const hiddenInput = group.querySelector('input[type="hidden"]');
+      group.querySelectorAll('.rating-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          group.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          if (hiddenInput) hiddenInput.value = btn.getAttribute('data-val');
+        });
+      });
+    });
+
+    // 3. Checkbox "Other" toggle
+    regStepContent.querySelectorAll('.other-checkbox-toggle').forEach(chk => {
+      chk.addEventListener('change', (e) => {
+        const qId = chk.getAttribute('data-qid');
+        const writeInBox = regStepContent.querySelector(`.other-writein-input[data-qid="${qId}"]`)?.closest('.other-input-box');
+        if (writeInBox) {
+          writeInBox.style.display = chk.checked ? 'block' : 'none';
+          if (chk.checked) {
+            const textInp = writeInBox.querySelector('input');
+            if (textInp) textInp.focus();
+          }
+        }
+      });
+    });
+  }
+
+  function renderReviewStepView() {
+    const session = (activeSessionSchema && activeSessionSchema.session) || activeModalSession;
+
+    const commonAnswers = [
+      { label: 'Full Name', value: registrationAnswers.fullName },
+      { label: 'Email Address', value: registrationAnswers.email },
+      { label: 'WhatsApp / Phone', value: registrationAnswers.phone },
+      { label: 'Occupation', value: registrationAnswers.occupation },
+      { label: 'Organization', value: registrationAnswers.organization },
+      { label: 'State / Location', value: registrationAnswers.state },
+    ].filter(item => item.value);
+
+    // Collect custom track answers
+    const customItems = [];
+    if (activeSessionSchema && activeSessionSchema.steps) {
+      for (const st of activeSessionSchema.steps) {
+        if (st.id === 'step_review' || st.id === 'step_profile') continue;
+        for (const q of st.questions) {
+          const ans = registrationAnswers[q.id];
+          if (ans !== undefined && ans !== null && ans !== '') {
+            let displayVal = ans;
+            if (Array.isArray(ans)) {
+              displayVal = ans.join(', ');
+            }
+            customItems.push({ label: q.label, value: displayVal });
+          }
+        }
+      }
+    }
+
+    return `
+      <div class="review-summary-card">
+        <div class="review-section">
+          <div class="review-section-title">Selected Session</div>
+          <div class="review-item">
+            <span class="review-item-label">Title</span>
+            <span class="review-item-value">${escapeHTML(session.title)}</span>
+          </div>
+          <div class="review-item">
+            <span class="review-item-label">Track & Category</span>
+            <span class="review-item-value">${escapeHTML(session.categoryLabel || getCategoryLabel(session.category))}</span>
+          </div>
+          <div class="review-item">
+            <span class="review-item-label">Facilitator</span>
+            <span class="review-item-value">${escapeHTML(session.facilitator?.name || 'Knowledge Facilitator')}</span>
+          </div>
+          <div class="review-item">
+            <span class="review-item-label">Format / Venue</span>
+            <span class="review-item-value">${escapeHTML(session.venue || session.format || 'Virtual Seminar')}</span>
+          </div>
+        </div>
+
+        <div class="review-section">
+          <div class="review-section-title">Your Contact & Profile</div>
+          ${commonAnswers.map(a => `
+            <div class="review-item">
+              <span class="review-item-label">${escapeHTML(a.label)}</span>
+              <span class="review-item-value">${escapeHTML(a.value)}</span>
+            </div>
+          `).join('')}
+        </div>
+
+        ${customItems.length > 0 ? `
+          <div class="review-section">
+            <div class="review-section-title">Track Specifics & Inquiries</div>
+            ${customItems.map(c => `
+              <div class="review-item">
+                <span class="review-item-label">${escapeHTML(c.label)}</span>
+                <span class="review-item-value">${escapeHTML(c.value)}</span>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        <p class="form-privacy-note" style="margin: 0;">
+          <strong>Consent Confirmation:</strong> By clicking "Confirm Seat", you confirm your attendance and agree to receive joining links and cohort materials.
+        </p>
+      </div>
+    `;
+  }
+
+  function collectCurrentStepAnswers() {
+    if (!regStepContent || !activeSessionSchema || !activeSessionSchema.steps) return;
+    const step = activeSessionSchema.steps[currentStepIndex];
+    if (!step || !step.questions) return;
+
+    for (const q of step.questions) {
+      const qId = q.id;
+      const fieldWrapper = regStepContent.querySelector(`#field_${qId}`);
+
+      // If hidden conditionally, leave answer or clear
+      if (fieldWrapper && fieldWrapper.classList.contains('conditional-hidden')) {
+        delete registrationAnswers[qId];
+        continue;
+      }
+
+      if (q.type === 'radio') {
+        const checked = regStepContent.querySelector(`input[name="${qId}"]:checked`);
+        if (checked) registrationAnswers[qId] = checked.value;
+      } else if (q.type === 'checkbox') {
+        const checkedBoxes = Array.from(regStepContent.querySelectorAll(`input[name="${qId}"]:checked`)).map(c => c.value);
+        const otherToggle = regStepContent.querySelector(`.other-checkbox-toggle[data-qid="${qId}"]`);
+        if (otherToggle && otherToggle.checked) {
+          const writeIn = regStepContent.querySelector(`.other-writein-input[data-qid="${qId}"]`)?.value?.trim();
+          if (writeIn) {
+            checkedBoxes.push(`Other: ${writeIn}`);
+          }
+        }
+        registrationAnswers[qId] = checkedBoxes;
+      } else if (q.type === 'rating') {
+        const hiddenInp = regStepContent.querySelector(`#q_${qId}`);
+        if (hiddenInp) registrationAnswers[qId] = hiddenInp.value;
+      } else {
+        const inp = regStepContent.querySelector(`#q_${qId}`);
+        if (inp) registrationAnswers[qId] = inp.value.trim();
+      }
+    }
+  }
+
+  function validateCurrentStep() {
+    collectCurrentStepAnswers();
+
+    if (!activeSessionSchema || !activeSessionSchema.steps) return true;
+    const step = activeSessionSchema.steps[currentStepIndex];
+    if (!step || !step.questions) return true;
+
+    for (const q of step.questions) {
+      const fieldWrapper = regStepContent.querySelector(`#field_${q.id}`);
+      if (fieldWrapper && fieldWrapper.classList.contains('conditional-hidden')) {
+        continue;
+      }
+
+      const val = registrationAnswers[q.id];
+
+      // Required check
+      if (q.required) {
+        if (val === undefined || val === null || val === '') {
+          showFormAlert(`Please provide an answer for: ${q.label}`, 'error');
+          const inp = regStepContent.querySelector(`#q_${q.id}`) || regStepContent.querySelector(`input[name="${q.id}"]`);
+          if (inp) inp.focus();
+          return false;
+        }
+        if (Array.isArray(val) && val.length === 0) {
+          showFormAlert(`Please select at least one option for: ${q.label}`, 'error');
+          return false;
+        }
+      }
+
+      // Format validations
+      if (val) {
+        if (q.type === 'email') {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(val)) {
+            showFormAlert('Please enter a valid email address (e.g. name@domain.com).', 'error');
+            const inp = regStepContent.querySelector(`#q_${q.id}`);
+            if (inp) inp.focus();
+            return false;
+          }
+        } else if (q.type === 'tel') {
+          if (String(val).length < 7) {
+            showFormAlert('Please provide a valid contact/WhatsApp phone number.', 'error');
+            const inp = regStepContent.querySelector(`#q_${q.id}`);
+            if (inp) inp.focus();
+            return false;
+          }
+        }
+      }
+    }
+
+    if (regFormAlert) regFormAlert.hidden = true;
+    return true;
+  }
+
+  // Setup Step Buttons Navigation
+  if (regNextBtn) {
+    regNextBtn.addEventListener('click', () => {
+      if (validateCurrentStep()) {
+        if (activeSessionSchema && currentStepIndex < activeSessionSchema.steps.length - 1) {
+          currentStepIndex++;
+          renderStepIndicators();
+          renderCurrentStepView();
+        }
+      }
+    });
+  }
+
+  if (regPrevBtn) {
+    regPrevBtn.addEventListener('click', () => {
+      collectCurrentStepAnswers();
+      if (currentStepIndex > 0) {
+        currentStepIndex--;
+        renderStepIndicators();
+        renderCurrentStepView();
+      }
+    });
+  }
+
+  /* --------------------------------------------------------------------------
+     8. REGISTRATION FORM SUBMISSION
      -------------------------------------------------------------------------- */
   async function handleRegistrationSubmit(e) {
     e.preventDefault();
     if (!registrationForm || !activeModalSession) return;
+
+    collectCurrentStepAnswers();
 
     // Reset alert
     if (regFormAlert) {
@@ -547,24 +1155,25 @@
       regFormAlert.className = 'form-alert';
     }
 
-    const formData = new FormData(registrationForm);
-    const fullName = formData.get('fullName')?.trim() || '';
-    const email = formData.get('email')?.trim() || '';
-    const sessionId = formData.get('sessionId') || activeModalSession.id;
+    const sessionId = (activeSessionSchema && activeSessionSchema.session?.id) || activeModalSession.id;
+    const fullName = registrationAnswers.fullName || '';
+    const email = registrationAnswers.email || '';
 
-    // Client-side quick check
+    // Quick client sanity check
     if (!fullName || fullName.length < 2) {
       showFormAlert('Please provide your full name (at least 2 characters).', 'error');
-      const nameInput = document.getElementById('reg-full-name');
-      if (nameInput) nameInput.focus();
+      currentStepIndex = 0;
+      renderStepIndicators();
+      renderCurrentStepView();
       return;
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email || !emailRegex.test(email)) {
-      showFormAlert('Please provide a valid email address (e.g. name@domain.com).', 'error');
-      const emailInput = document.getElementById('reg-email');
-      if (emailInput) emailInput.focus();
+      showFormAlert('Please provide a valid email address.', 'error');
+      currentStepIndex = 0;
+      renderStepIndicators();
+      renderCurrentStepView();
       return;
     }
 
@@ -572,6 +1181,11 @@
       sessionId,
       fullName,
       email,
+      phone: registrationAnswers.phone || null,
+      occupation: registrationAnswers.occupation || null,
+      organization: registrationAnswers.organization || null,
+      state: registrationAnswers.state || null,
+      answers: registrationAnswers,
     };
 
     // Set loading state
@@ -594,29 +1208,28 @@
       }
 
       const result = parsed.data || {};
+      const registeredTitle = activeModalSession.title;
 
-      // Success view
-      if (registrationForm) registrationForm.hidden = true;
-      if (regSuccessCard) regSuccessCard.hidden = false;
-      if (successSessionTitle) successSessionTitle.textContent = activeModalSession.title;
-      if (successAttendeeName) successAttendeeName.textContent = `${fullName} (${email})`;
-      if (regSuccessMessage) {
-        regSuccessMessage.textContent = result.message || `A confirmation email has been dispatched to ${email}. Your seat is confirmed.`;
-      }
-
-      showToast(`Registration confirmed for ${activeModalSession.title}!`);
-
-      // Update local registration counter if applicable
+      // Update local registration counter
       if (typeof activeModalSession.registrationsCount === 'number') {
         activeModalSession.registrationsCount++;
       }
+
+      // Close modal and return participant directly to the website
+      closeSessionModal();
+
+      // Show confirmation toast notification on website
+      showToast(result.message || `Seat confirmed for "${registeredTitle}"! A confirmation has been dispatched to ${email}.`);
+
+      // Re-render sessions so updated registration count is immediately visible
+      renderSessions(activeCategory);
     } catch (err) {
       showFormAlert(err.message, 'error');
     } finally {
       if (regSubmitBtn) {
         regSubmitBtn.disabled = false;
         const textSpan = regSubmitBtn.querySelector('.btn-text');
-        if (textSpan) textSpan.textContent = 'Confirm Free Registration';
+        if (textSpan) textSpan.textContent = 'Confirm Seat';
       }
     }
   }
@@ -739,15 +1352,10 @@
 
       const result = parsed.data || {};
 
-      // Success view
-      if (participantViewForm) participantViewForm.hidden = true;
-      if (participantSuccessCard) participantSuccessCard.hidden = false;
-      if (participantSuccessName) participantSuccessName.textContent = `${fullName} (${email})`;
-      if (participantSuccessMessage) {
-        participantSuccessMessage.textContent = result.message || 'You are now officially registered as a participant in the D Maain Voice Knowledge Project.';
-      }
+      // Close participant modal and return directly to website
+      closeParticipantModal();
 
-      showToast('Welcome to the D Maain Voice community!');
+      showToast(result.message || `Welcome to the community, ${fullName}! You are now registered.`);
     } catch (err) {
       showParticipantAlert(err.message, 'error');
     } finally {

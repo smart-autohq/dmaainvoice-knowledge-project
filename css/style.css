@@ -2698,3 +2698,288 @@ dialog.modal-dialog[open] {
   border-color: #FCA5A5;
 }
 
+/* --------------------------------------------------------------------------
+   16. MULTI-STEP REGISTRATION & DYNAMIC QUESTIONS
+   -------------------------------------------------------------------------- */
+.multi-step-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.step-progress-bar-wrapper {
+  margin-bottom: var(--space-md);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.step-indicators {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-xs);
+  position: relative;
+}
+
+.step-indicator-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: var(--fw-semibold);
+  color: var(--color-muted);
+  cursor: default;
+  transition: color var(--transition-fast);
+}
+
+.step-indicator-item.active {
+  color: var(--color-charcoal);
+  font-weight: var(--fw-bold);
+}
+
+.step-indicator-item.completed {
+  color: var(--color-nacos-green, #00873E);
+}
+
+.step-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  border: 1.5px solid var(--color-border);
+  background-color: var(--color-ivory);
+  color: var(--color-muted);
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.step-indicator-item.active .step-circle {
+  border-color: var(--color-charcoal);
+  background-color: var(--color-charcoal);
+  color: var(--color-yellow);
+}
+
+.step-indicator-item.completed .step-circle {
+  border-color: var(--color-nacos-green, #00873E);
+  background-color: var(--color-nacos-green, #00873E);
+  color: var(--color-white);
+}
+
+.step-track {
+  height: 4px;
+  background-color: var(--color-border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.step-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--color-charcoal) 0%, var(--color-yellow) 100%);
+  width: 33.33%;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.step-header {
+  margin-bottom: var(--space-md);
+}
+
+.step-title {
+  font-size: 1.15rem;
+  font-weight: var(--fw-bold);
+  color: var(--color-charcoal);
+  margin-bottom: 2px;
+}
+
+.step-subtitle {
+  font-size: 0.8125rem;
+  color: var(--color-muted);
+}
+
+.step-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  animation: stepFadeIn 0.25s ease-out;
+}
+
+@keyframes stepFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Question Types Styling */
+.question-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.question-field.conditional-hidden {
+  display: none !important;
+}
+
+.question-label {
+  font-size: 0.8125rem;
+  font-weight: var(--fw-semibold);
+  color: var(--color-charcoal);
+  line-height: 1.4;
+}
+
+.question-label .required {
+  color: #D9381E;
+}
+
+.question-label .optional {
+  color: var(--color-muted);
+  font-weight: var(--fw-normal);
+  font-size: 0.75rem;
+  margin-left: 4px;
+}
+
+.question-helper {
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  line-height: 1.4;
+}
+
+/* Radio Choice Cards */
+.choice-cards-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.choice-card-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-white);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 0.875rem;
+  color: var(--color-charcoal);
+  line-height: 1.4;
+}
+
+.choice-card-label:hover {
+  border-color: var(--color-charcoal);
+  background-color: var(--color-ivory);
+}
+
+.choice-card-label input[type="radio"],
+.choice-card-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--color-charcoal);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.choice-card-label.selected {
+  border-color: var(--color-charcoal);
+  background-color: var(--color-yellow-light);
+  font-weight: var(--fw-medium);
+}
+
+/* Rating Scale */
+.rating-scale-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 4px;
+}
+
+.rating-btn {
+  flex: 1;
+  padding: 0.5rem;
+  text-align: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-white);
+  font-size: 0.875rem;
+  font-weight: var(--fw-semibold);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.rating-btn:hover {
+  background-color: var(--color-ivory);
+  border-color: var(--color-charcoal);
+}
+
+.rating-btn.active {
+  background-color: var(--color-charcoal);
+  color: var(--color-yellow);
+  border-color: var(--color-charcoal);
+}
+
+/* Review Step Card */
+.review-summary-card {
+  background-color: var(--color-ivory);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.review-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.review-section-title {
+  font-size: 0.75rem;
+  font-weight: var(--fw-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-muted);
+  border-bottom: 1px dashed var(--color-border);
+  padding-bottom: 4px;
+}
+
+.review-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 0.84rem;
+}
+
+.review-item-label {
+  color: var(--color-muted);
+  font-weight: var(--fw-medium);
+  flex-shrink: 0;
+  max-width: 40%;
+}
+
+.review-item-value {
+  color: var(--color-charcoal);
+  font-weight: var(--fw-semibold);
+  text-align: right;
+  word-break: break-word;
+}
+
+.step-nav-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--color-border);
+}
+
+.step-nav-actions .btn {
+  min-width: 110px;
+}
+
+

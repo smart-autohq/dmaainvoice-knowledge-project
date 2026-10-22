@@ -316,6 +316,7 @@
       else if (targetTab === 'participants') loadParticipantsList();
       else if (targetTab === 'campaigns') loadCampaignsList();
       else if (targetTab === 'content') loadWebsiteContent();
+      else if (targetTab === 'questions') loadQuestionsManagement();
     });
   });
 
@@ -711,11 +712,12 @@
           <td>${escapeHTML(p.state || '—')}</td>
           <td>
             ${p.registrations.map(r => `
-              <div style="margin-bottom: 4px;">
+              <div style="margin-bottom: 6px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
                 <span class="badge-status ${r.attended ? 'badge-attended' : 'badge-absent'}" onclick="window.toggleAttendance('${r.id}', ${!r.attended})" title="Click to toggle attendance">
                   ${r.attended ? '✓ Attended' : '○ Registered'}
                 </span>
-                <small style="margin-left: 4px;">${escapeHTML(r.session.title.slice(0, 30))}...</small>
+                <small style="margin-left: 2px;">${escapeHTML(r.session.title.slice(0, 24))}...</small>
+                <button type="button" class="btn btn-secondary btn-sm" style="padding: 1px 6px; font-size: 11px;" onclick="window.viewRegistrationAnswers('${r.id}')" title="View Submitted Form Answers">Responses</button>
               </div>
             `).join('')}
           </td>
@@ -739,6 +741,66 @@
       loadParticipantsList(document.getElementById('participant-search-input')?.value.trim() || '');
     } catch (err) {
       alert(err.message);
+    }
+  };
+
+  const answersModal = document.getElementById('admin-answers-modal');
+  const btnCloseAnswersModal = document.getElementById('btn-close-answers-modal');
+  const btnCloseAnswersBottom = document.getElementById('btn-close-answers-bottom');
+  if (btnCloseAnswersModal) btnCloseAnswersModal.addEventListener('click', () => answersModal?.close());
+  if (btnCloseAnswersBottom) btnCloseAnswersBottom.addEventListener('click', () => answersModal?.close());
+
+  window.viewRegistrationAnswers = async function (registrationId) {
+    if (!answersModal) return;
+
+    const container = document.getElementById('ans-answers-table-container');
+    if (container) container.innerHTML = '<p class="text-muted">Loading responses...</p>';
+
+    try {
+      const res = await apiFetch(`/api/admin/registrations/${registrationId}`);
+      const json = await res.json();
+      const reg = json.data;
+      if (!reg) throw new Error('Registration record not found');
+
+      document.getElementById('ans-participant-name').textContent = `${reg.participant?.firstName || ''} ${reg.participant?.lastName || ''}`.trim() || '—';
+      document.getElementById('ans-participant-contact').textContent = `${reg.participant?.email || ''} • ${reg.participant?.phone || 'No phone'}`;
+      document.getElementById('ans-session-title').textContent = reg.session?.title || '—';
+      document.getElementById('ans-attendance-status').textContent = reg.attended ? '✓ Attended' : '○ Not Yet Marked Attended';
+
+      const answers = reg.answers || {};
+      const answerKeys = Object.keys(answers);
+
+      if (answerKeys.length === 0) {
+        container.innerHTML = '<p class="text-muted" style="padding: 1rem 0;">No custom answers recorded for this registration.</p>';
+      } else {
+        container.innerHTML = `
+          <table class="dash-table" style="font-size: 0.8125rem;">
+            <thead>
+              <tr>
+                <th style="width: 40%;">Field / Question</th>
+                <th>Participant Response</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${answerKeys.map(k => {
+                let val = answers[k];
+                if (Array.isArray(val)) val = val.join(', ');
+                else if (typeof val === 'object' && val !== null) val = JSON.stringify(val);
+                return `
+                  <tr>
+                    <td><strong>${escapeHTML(k)}</strong></td>
+                    <td style="word-break: break-word;">${escapeHTML(String(val))}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+
+      answersModal.showModal();
+    } catch (err) {
+      alert(`Could not load registration responses: ${err.message}`);
     }
   };
 
@@ -929,6 +991,322 @@
     });
   }
 
+  /* --------------------------------------------------------------------------
+     10. REGISTRATION QUESTIONS & FORM BUILDER
+     -------------------------------------------------------------------------- */
+  let workingQuestionsConfig = {
+    commonQuestions: [],
+    categoryQuestions: {},
+    sessionQuestions: {},
+  };
+  let activeQuestionScope = 'common';
+  let activeCategoryScope = 'finance';
+  let activeSessionScope = '';
+
+  const addQuestionModal = document.getElementById('admin-add-question-modal');
+  const addQuestionForm = document.getElementById('admin-add-question-form');
+  const btnOpenAddQuestion = document.getElementById('btn-open-add-question');
+  const btnCloseAddQuestionModal = document.getElementById('btn-close-add-question-modal');
+  const btnCancelAddQuestion = document.getElementById('btn-cancel-add-question');
+  const btnSaveQuestions = document.getElementById('btn-save-questions');
+
+  const btnScopeCommon = document.getElementById('btn-scope-common');
+  const btnScopeCategory = document.getElementById('btn-scope-category');
+  const btnScopeSession = document.getElementById('btn-scope-session');
+  const scopeCatSelector = document.getElementById('scope-category-selector');
+  const scopeSessSelector = document.getElementById('scope-session-selector');
+  const selectQuestionCategory = document.getElementById('select-question-category');
+  const selectQuestionSession = document.getElementById('select-question-session');
+  const questionsListContainer = document.getElementById('questions-list-container');
+  const aqTypeSelect = document.getElementById('aq-type');
+  const aqOptionsGroup = document.getElementById('aq-options-group');
+
+  async function loadQuestionsManagement() {
+    if (!questionsListContainer) return;
+    questionsListContainer.innerHTML = '<p class="text-muted text-center" style="padding: 2rem;">Loading questions configuration...</p>';
+
+    try {
+      // 1. Fetch current questions config
+      const res = await apiFetch('/api/admin/questions');
+      const json = await res.json();
+      if (json.data) {
+        workingQuestionsConfig = json.data;
+        if (!workingQuestionsConfig.commonQuestions) workingQuestionsConfig.commonQuestions = [];
+        if (!workingQuestionsConfig.categoryQuestions) workingQuestionsConfig.categoryQuestions = {};
+        if (!workingQuestionsConfig.sessionQuestions) workingQuestionsConfig.sessionQuestions = {};
+      }
+
+      // 2. Load sessions dropdown for session scope
+      await populateSessionScopeDropdown();
+
+      // 3. Render questions list for current scope
+      renderQuestionsList();
+    } catch (err) {
+      questionsListContainer.innerHTML = `<p class="text-muted text-center" style="color: #D9381E;">Error loading questions: ${escapeHTML(err.message)}</p>`;
+    }
+  }
+
+  async function populateSessionScopeDropdown() {
+    if (!selectQuestionSession) return;
+    try {
+      if (!allSessionsList || allSessionsList.length === 0) {
+        const res = await apiFetch('/api/admin/sessions');
+        const json = await res.json();
+        allSessionsList = json.data || [];
+      }
+
+      selectQuestionSession.innerHTML = allSessionsList.map(s => `
+        <option value="${s.id}">${escapeHTML(s.title.slice(0, 38))}${s.title.length > 38 ? '...' : ''}</option>
+      `).join('');
+
+      if (allSessionsList.length > 0 && !activeSessionScope) {
+        activeSessionScope = allSessionsList[0].id;
+      }
+    } catch (e) {
+      console.warn('Could not populate session scope select:', e);
+    }
+  }
+
+  function setQuestionScope(scope) {
+    activeQuestionScope = scope;
+
+    [btnScopeCommon, btnScopeCategory, btnScopeSession].forEach(btn => {
+      if (btn) btn.classList.remove('active');
+    });
+
+    if (scopeCatSelector) scopeCatSelector.style.display = scope === 'category' ? 'flex' : 'none';
+    if (scopeSessSelector) scopeSessSelector.style.display = scope === 'session' ? 'flex' : 'none';
+
+    if (scope === 'common' && btnScopeCommon) btnScopeCommon.classList.add('active');
+    else if (scope === 'category' && btnScopeCategory) btnScopeCategory.classList.add('active');
+    else if (scope === 'session' && btnScopeSession) btnScopeSession.classList.add('active');
+
+    renderQuestionsList();
+  }
+
+  if (btnScopeCommon) btnScopeCommon.addEventListener('click', () => setQuestionScope('common'));
+  if (btnScopeCategory) btnScopeCategory.addEventListener('click', () => setQuestionScope('category'));
+  if (btnScopeSession) btnScopeSession.addEventListener('click', () => setQuestionScope('session'));
+
+  if (selectQuestionCategory) {
+    selectQuestionCategory.addEventListener('change', (e) => {
+      activeCategoryScope = e.target.value;
+      renderQuestionsList();
+    });
+  }
+
+  if (selectQuestionSession) {
+    selectQuestionSession.addEventListener('change', (e) => {
+      activeSessionScope = e.target.value;
+      renderQuestionsList();
+    });
+  }
+
+  function getCurrentScopeQuestionsArray() {
+    if (activeQuestionScope === 'common') {
+      if (!workingQuestionsConfig.commonQuestions) workingQuestionsConfig.commonQuestions = [];
+      return workingQuestionsConfig.commonQuestions;
+    }
+    if (activeQuestionScope === 'category') {
+      if (!workingQuestionsConfig.categoryQuestions) workingQuestionsConfig.categoryQuestions = {};
+      if (!workingQuestionsConfig.categoryQuestions[activeCategoryScope]) {
+        workingQuestionsConfig.categoryQuestions[activeCategoryScope] = [];
+      }
+      return workingQuestionsConfig.categoryQuestions[activeCategoryScope];
+    }
+    if (activeQuestionScope === 'session') {
+      if (!workingQuestionsConfig.sessionQuestions) workingQuestionsConfig.sessionQuestions = {};
+      if (!workingQuestionsConfig.sessionQuestions[activeSessionScope]) {
+        workingQuestionsConfig.sessionQuestions[activeSessionScope] = [];
+      }
+      return workingQuestionsConfig.sessionQuestions[activeSessionScope];
+    }
+    return [];
+  }
+
+  function renderQuestionsList() {
+    if (!questionsListContainer) return;
+
+    const list = getCurrentScopeQuestionsArray();
+
+    let scopeTitle = 'Common Questions (Applies to all sessions)';
+    if (activeQuestionScope === 'category') {
+      scopeTitle = `Questions for Track: "${selectQuestionCategory?.options[selectQuestionCategory.selectedIndex]?.text || activeCategoryScope}"`;
+    } else if (activeQuestionScope === 'session') {
+      const sess = (allSessionsList || []).find(s => s.id === activeSessionScope);
+      scopeTitle = `Questions for Session: "${sess ? sess.title : activeSessionScope}"`;
+    }
+
+    if (list.length === 0) {
+      questionsListContainer.innerHTML = `
+        <div style="padding: 2.5rem 1rem; text-align: center;">
+          <h4 style="font-size: 1rem; color: var(--color-charcoal); margin-bottom: 6px;">${escapeHTML(scopeTitle)}</h4>
+          <p class="text-muted" style="margin-bottom: 1rem;">No custom questions configured for this scope yet.</p>
+          <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('btn-open-add-question').click()">
+            + Add First Question
+          </button>
+        </div>
+      `;
+      return;
+    }
+
+    questionsListContainer.innerHTML = `
+      <div style="margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--color-border); display: flex; justify-content: space-between; align-items: center;">
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--color-charcoal); margin: 0;">${escapeHTML(scopeTitle)} (${list.length})</h4>
+        <span class="text-muted" style="font-size: 0.75rem;">Changes are saved upon clicking "Save All Question Changes"</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        ${list.map((q, idx) => `
+          <div class="dash-card" style="padding: 1rem; border: 1px solid var(--color-border); background-color: var(--color-white); position: relative;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+              <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
+                  <span style="font-size: 0.75rem; font-weight: 700; background-color: #F7F6F2; padding: 2px 6px; border-radius: 4px; border: 1px solid #E5E2DA;">#${idx + 1}</span>
+                  <strong style="font-size: 0.9375rem; color: var(--color-charcoal);">${escapeHTML(q.label)}</strong>
+                  <span class="badge-status ${q.required ? 'badge-absent' : ''}" style="font-size: 10px; padding: 2px 6px;">
+                    ${q.required ? 'Required' : 'Optional'}
+                  </span>
+                  <span style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(37,37,37,0.08); padding: 2px 6px; border-radius: 4px; font-weight: 600;">
+                    ${escapeHTML(q.type)}
+                  </span>
+                  <code style="font-size: 10px; color: var(--color-muted);">[id: ${escapeHTML(q.id)}]</code>
+                </div>
+
+                ${q.helperText ? `<p style="font-size: 0.8125rem; color: var(--color-muted); margin: 4px 0;">${escapeHTML(q.helperText)}</p>` : ''}
+
+                ${(q.options && q.options.length > 0) ? `
+                  <div style="margin-top: 6px; font-size: 0.75rem; color: var(--color-charcoal);">
+                    <strong>Options:</strong> ${q.options.map(o => escapeHTML(typeof o === 'object' ? o.label : o)).join(' • ')}
+                    ${q.allowOther ? '<span style="color: var(--color-muted); font-style: italic;"> (+ Other write-in)</span>' : ''}
+                  </div>
+                ` : ''}
+
+                ${q.dependsOn ? `
+                  <div style="margin-top: 4px; font-size: 0.75rem; color: #B45309; background: #FFFBEB; padding: 2px 8px; border-radius: 4px; display: inline-block;">
+                    ⚡ Visible when <strong>[${escapeHTML(q.dependsOn.questionId)}]</strong> is set to <strong>"${escapeHTML(q.dependsOn.value)}"</strong>
+                  </div>
+                ` : ''}
+              </div>
+
+              <div>
+                <button type="button" class="btn btn-ghost btn-sm" style="color: #D9381E;" onclick="window.deleteAdminQuestion(${idx})">
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  window.deleteAdminQuestion = function (index) {
+    const list = getCurrentScopeQuestionsArray();
+    if (!list || list[index] === undefined) return;
+    const item = list[index];
+
+    if (!confirm(`Remove question "${item.label}" from this group?`)) return;
+
+    list.splice(index, 1);
+    renderQuestionsList();
+    showToast('Question removed from working list. Click "Save All Question Changes" to persist.');
+  };
+
+  // Add Question Modal Controls
+  if (btnOpenAddQuestion) {
+    btnOpenAddQuestion.addEventListener('click', () => {
+      if (addQuestionForm) addQuestionForm.reset();
+      if (aqOptionsGroup) aqOptionsGroup.style.display = 'none';
+      if (addQuestionModal) addQuestionModal.showModal();
+    });
+  }
+
+  if (btnCloseAddQuestionModal) btnCloseAddQuestionModal.addEventListener('click', () => addQuestionModal?.close());
+  if (btnCancelAddQuestion) btnCancelAddQuestion.addEventListener('click', () => addQuestionModal?.close());
+
+  if (aqTypeSelect) {
+    aqTypeSelect.addEventListener('change', () => {
+      const needsOptions = ['radio', 'checkbox', 'select'].includes(aqTypeSelect.value);
+      if (aqOptionsGroup) aqOptionsGroup.style.display = needsOptions ? 'block' : 'none';
+    });
+  }
+
+  if (addQuestionForm) {
+    addQuestionForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const label = document.getElementById('aq-label').value.trim();
+      const id = document.getElementById('aq-id').value.trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+      const type = document.getElementById('aq-type').value;
+      const helper = document.getElementById('aq-helper').value.trim();
+      const required = document.getElementById('aq-required').checked;
+      const optionsText = document.getElementById('aq-options')?.value || '';
+      const allowOther = document.getElementById('aq-allow-other')?.checked || false;
+      const dependsId = document.getElementById('aq-depends-id')?.value.trim() || '';
+      const dependsVal = document.getElementById('aq-depends-val')?.value.trim() || '';
+
+      if (!label || !id) {
+        alert('Label and Field ID are required.');
+        return;
+      }
+
+      let parsedOptions = [];
+      if (['radio', 'checkbox', 'select'].includes(type)) {
+        parsedOptions = optionsText
+          .split(/[\n,]/)
+          .map(o => o.trim())
+          .filter(Boolean);
+        if (parsedOptions.length === 0 && !allowOther) {
+          alert('Please provide at least one selectable option for this question type.');
+          return;
+        }
+      }
+
+      const newQ = {
+        id,
+        label,
+        type,
+        required,
+        helperText: helper || undefined,
+        options: parsedOptions.length > 0 ? parsedOptions : undefined,
+        allowOther: allowOther || undefined,
+        dependsOn: (dependsId && dependsVal) ? { questionId: dependsId, value: dependsVal } : undefined,
+      };
+
+      const list = getCurrentScopeQuestionsArray();
+      list.push(newQ);
+
+      addQuestionModal?.close();
+      renderQuestionsList();
+      showToast(`Question "${label}" added. Click "Save All Question Changes" to persist to database.`);
+    });
+  }
+
+  if (btnSaveQuestions) {
+    btnSaveQuestions.addEventListener('click', async () => {
+      try {
+        btnSaveQuestions.disabled = true;
+        btnSaveQuestions.textContent = 'Saving to Database...';
+
+        const res = await apiFetch('/api/admin/questions', {
+          method: 'PUT',
+          body: JSON.stringify(workingQuestionsConfig),
+        });
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error || 'Failed to save');
+
+        showToast('All registration questions persisted to database successfully.');
+      } catch (err) {
+        alert(`Error saving questions: ${err.message}`);
+      } finally {
+        btnSaveQuestions.disabled = false;
+        btnSaveQuestions.textContent = 'Save All Question Changes';
+      }
+    });
+  }
+
   // Initial Check
   checkAuthSession();
 })();
+

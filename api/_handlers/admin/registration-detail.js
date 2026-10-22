@@ -8,6 +8,31 @@ async function handler(req, res) {
     return res.status(400).json({ error: 'Registration ID is required.' });
   }
 
+  if (req.method === 'GET') {
+    try {
+      const reg = await prisma.registration.findUnique({
+        where: { id },
+        include: {
+          participant: true,
+          session: {
+            include: {
+              facilitator: true,
+            },
+          },
+        },
+      });
+
+      if (!reg) {
+        return res.status(404).json({ error: 'Registration record not found.' });
+      }
+
+      return res.status(200).json({ success: true, data: reg });
+    } catch (error) {
+      console.error('Error fetching registration detail:', error);
+      return res.status(500).json({ error: 'Failed to retrieve registration.' });
+    }
+  }
+
   if (req.method === 'PUT') {
     try {
       const { attended } = req.body || {};
@@ -52,7 +77,7 @@ async function handler(req, res) {
     }
   }
 
-  res.setHeader('Allow', ['PUT', 'DELETE']);
+  res.setHeader('Allow', ['GET', 'PUT', 'DELETE']);
   return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
 }
 

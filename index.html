@@ -611,46 +611,48 @@
           </div>
         </div>
 
-        <!-- Tab View 2: Registration Form -->
+        <!-- Tab View 2: Multi-Step Registration Engine -->
         <div class="modal-tab-view" id="modal-view-register" role="tabpanel" aria-labelledby="modal-tab-register"
           hidden>
           <div class="registration-form-header">
             <p class="registration-intro">
-              Reserve your seat for <strong><span id="reg-session-title-placeholder">this session</span></strong>.
-              Participation is free and open to students, emerging professionals, and researchers.
+              Registering for: <strong id="reg-session-title-placeholder">Selected Session</strong>
             </p>
+          </div>
+
+          <!-- Step Progress Indicator -->
+          <div class="step-progress-bar-wrapper" id="reg-progress-wrapper">
+            <div class="step-indicators" id="reg-step-indicators">
+              <!-- Populated dynamically via JS based on session config -->
+            </div>
+            <div class="step-track" aria-hidden="true">
+              <div class="step-fill" id="reg-step-fill"></div>
+            </div>
           </div>
 
           <!-- Registration Alert Box -->
           <div class="form-alert" id="reg-form-alert" role="alert" hidden></div>
 
-          <!-- Active Form -->
-          <form id="registration-form" class="registration-form" novalidate>
+          <!-- Multi-Step Active Form -->
+          <form id="registration-form" class="registration-form multi-step-container" novalidate>
             <input type="hidden" id="reg-session-id" name="sessionId">
 
-            <div class="form-group">
-              <label for="reg-full-name" class="form-label">Full Name <span class="required">*</span></label>
-              <input type="text" id="reg-full-name" name="fullName" class="form-input" required autocomplete="name"
-                placeholder="e.g. Amina Bello">
+            <!-- Step Container: Content dynamically rendered based on active step -->
+            <div id="reg-step-content" class="step-view">
+              <!-- Dynamically populated step view -->
             </div>
 
-            <div class="form-group">
-              <label for="reg-email" class="form-label">Email Address <span class="required">*</span></label>
-              <input type="email" id="reg-email" name="email" class="form-input" required autocomplete="email"
-                placeholder="name@domain.com">
-              <span class="form-help">Interactive session access coordinates will be sent directly to this
-                address.</span>
-            </div>
-
-            <p class="form-privacy-note">
-              <strong>Registration Consent:</strong> By confirming your seat, you consent to receive virtual joining
-              coordinates and essential schedule updates for this session. This registration does not opt you into
-              general marketing newsletters.
-            </p>
-
-            <div class="form-actions">
-              <button type="submit" class="btn btn-primary btn-full" id="reg-submit-btn">
-                <span class="btn-text">Confirm Free Registration</span>
+            <!-- Multi-Step Navigation Actions -->
+            <div class="step-nav-actions" id="reg-nav-actions">
+              <button type="button" class="btn btn-secondary" id="reg-prev-btn" style="display: none;">
+                &larr; Back
+              </button>
+              <div style="flex: 1;"></div>
+              <button type="button" class="btn btn-primary" id="reg-next-btn">
+                <span class="btn-text">Continue &rarr;</span>
+              </button>
+              <button type="submit" class="btn btn-primary" id="reg-submit-btn" style="display: none;">
+                <span class="btn-text">Confirm Seat</span>
                 <span class="btn-spinner" hidden aria-hidden="true"></span>
               </button>
             </div>
@@ -664,9 +666,9 @@
                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
               </svg>
             </div>
-            <h4 class="success-title">You're Registered!</h4>
+            <h4 class="success-title">Seat Confirmed!</h4>
             <p class="success-desc" id="reg-success-message">
-              A confirmation email has been dispatched with session details.
+              Your registration has been recorded and interactive access details are on their way.
             </p>
             <div class="success-details-box">
               <div class="success-detail-row">
@@ -676,6 +678,10 @@
               <div class="success-detail-row">
                 <span class="detail-label">Attendee:</span>
                 <span id="success-attendee-name">—</span>
+              </div>
+              <div class="success-detail-row">
+                <span class="detail-label">Track & Facilitator:</span>
+                <span id="success-session-meta">—</span>
               </div>
             </div>
             <div class="success-actions">

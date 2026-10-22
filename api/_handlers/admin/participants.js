@@ -47,8 +47,18 @@ async function handler(req, res) {
             id: true,
             registeredAt: true,
             attended: true,
+            answers: true,
             session: {
-              select: { id: true, title: true, sessionDate: true },
+              select: {
+                id: true,
+                title: true,
+                category: true,
+                sessionDate: true,
+                venue: true,
+                facilitator: {
+                  select: { id: true, name: true, title: true },
+                },
+              },
             },
           },
         },
@@ -60,9 +70,13 @@ async function handler(req, res) {
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', 'attachment; filename="dmaainvoice_participants.csv"');
 
-      let csv = 'ID,First Name,Last Name,Email,Phone,Occupation,Organization,State,Country,Subscribed,Registered At,Sessions Count\n';
+      let csv = 'ID,First Name,Last Name,Email,Phone,Occupation,Organization,State,Country,Subscribed,Registered At,Sessions Count,Registered Sessions & Answers\n';
       for (const p of participants) {
-        csv += `"${p.id}","${escapeCsv(p.firstName)}","${escapeCsv(p.lastName)}","${escapeCsv(p.email)}","${escapeCsv(p.phone || '')}","${escapeCsv(p.occupation || '')}","${escapeCsv(p.organization || '')}","${escapeCsv(p.state || '')}","${escapeCsv(p.country)}",${p.subscribed ? 'Yes' : 'No'},"${p.registeredAt.toISOString()}",${p.registrations.length}\n`;
+        const sessionSummary = p.registrations.map(r => {
+          const ansStr = r.answers && Object.keys(r.answers).length ? ` [Answers: ${JSON.stringify(r.answers)}]` : '';
+          return `${r.session?.title || 'Session'}${ansStr}`;
+        }).join('; ');
+        csv += `"${p.id}","${escapeCsv(p.firstName)}","${escapeCsv(p.lastName)}","${escapeCsv(p.email)}","${escapeCsv(p.phone || '')}","${escapeCsv(p.occupation || '')}","${escapeCsv(p.organization || '')}","${escapeCsv(p.state || '')}","${escapeCsv(p.country)}",${p.subscribed ? 'Yes' : 'No'},"${p.registeredAt.toISOString()}",${p.registrations.length},"${escapeCsv(sessionSummary)}"\n`;
       }
       return res.status(200).send(csv);
     }

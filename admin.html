@@ -100,6 +100,10 @@
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
           Website & Announcements
         </button>
+        <button type="button" class="dash-nav-item" data-tab="questions" role="tab" aria-selected="false">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          Registration Questions
+        </button>
       </nav>
 
       <!-- Main Panels -->
@@ -362,6 +366,64 @@
           </div>
         </section>
 
+        <!-- ================= TAB 7: REGISTRATION QUESTIONS BUILDER ================= -->
+        <section class="dash-panel" id="panel-questions" hidden>
+          <div class="panel-header">
+            <div>
+              <span class="panel-eyebrow">FORM ARCHITECTURE</span>
+              <h2 class="panel-title">Registration Questions & Dynamic Form Builder</h2>
+            </div>
+            <div class="panel-actions" style="display: flex; gap: 8px;">
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-open-add-question">+ Add New Question</button>
+              <button type="button" class="btn btn-primary btn-sm" id="btn-save-questions">Save All Question Changes</button>
+            </div>
+          </div>
+
+          <!-- Scope Selection Tabs -->
+          <div class="dash-card" style="margin-bottom: 1rem;">
+            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;">
+              <div style="display: flex; gap: 8px;" role="tablist" aria-label="Question Scope">
+                <button type="button" class="btn btn-sm btn-secondary active" id="btn-scope-common" data-scope="common">
+                  Common Questions (All Sessions)
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" id="btn-scope-category" data-scope="category">
+                  Category-Specific Questions
+                </button>
+                <button type="button" class="btn btn-sm btn-secondary" id="btn-scope-session" data-scope="session">
+                  Session-Specific Questions
+                </button>
+              </div>
+
+              <!-- Scope sub-selectors -->
+              <div id="scope-category-selector" style="display: none; align-items: center; gap: 8px;">
+                <label for="select-question-category" class="form-label" style="margin: 0;">Track / Category:</label>
+                <select id="select-question-category" class="form-input form-input-sm" style="width: auto;">
+                  <option value="finance">Islamic Finance</option>
+                  <option value="technology">Technology</option>
+                  <option value="business">Business</option>
+                  <option value="personal-development">Personal Development</option>
+                  <option value="public-speaking">Public Speaking</option>
+                  <option value="career">Career & Growth</option>
+                </select>
+              </div>
+
+              <div id="scope-session-selector" style="display: none; align-items: center; gap: 8px;">
+                <label for="select-question-session" class="form-label" style="margin: 0;">Session:</label>
+                <select id="select-question-session" class="form-input form-input-sm" style="max-width: 300px;">
+                  <!-- Populated via JS -->
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Questions List -->
+          <div class="dash-card">
+            <div id="questions-list-container">
+              <p class="text-muted text-center" style="padding: 2rem;">Loading question definitions...</p>
+            </div>
+          </div>
+        </section>
+
       </main>
     </div>
   </div>
@@ -527,6 +589,125 @@
         <div class="admin-modal-footer">
           <button type="button" class="btn btn-secondary" id="btn-cancel-campaign">Cancel</button>
           <button type="submit" class="btn btn-primary" id="btn-save-campaign">Save Draft</button>
+        </div>
+      </form>
+    </div>
+  </dialog>
+
+  <!-- MODAL: REGISTRATION ANSWERS DETAIL -->
+  <dialog class="admin-modal" id="admin-answers-modal">
+    <div class="admin-modal-box" style="max-width: 640px;">
+      <div class="admin-modal-header">
+        <h3 id="ans-modal-title">Registration Form Responses</h3>
+        <button type="button" class="btn-close" id="btn-close-answers-modal">&times;</button>
+      </div>
+      <div class="admin-modal-form" style="max-height: 75vh; overflow-y: auto;">
+        <div class="dash-card" style="margin-bottom: 1rem; background-color: #F7F6F2;">
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; font-size: 0.8125rem;">
+            <div>
+              <span class="text-muted" style="display: block; font-size: 0.7rem; text-transform: uppercase;">Participant</span>
+              <strong id="ans-participant-name">—</strong>
+            </div>
+            <div>
+              <span class="text-muted" style="display: block; font-size: 0.7rem; text-transform: uppercase;">Email & Phone</span>
+              <span id="ans-participant-contact">—</span>
+            </div>
+            <div>
+              <span class="text-muted" style="display: block; font-size: 0.7rem; text-transform: uppercase;">Session</span>
+              <strong id="ans-session-title">—</strong>
+            </div>
+            <div>
+              <span class="text-muted" style="display: block; font-size: 0.7rem; text-transform: uppercase;">Attendance</span>
+              <span id="ans-attendance-status">—</span>
+            </div>
+          </div>
+        </div>
+
+        <h4 style="font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; color: #6B6963;">
+          Submitted Answers
+        </h4>
+        <div id="ans-answers-table-container">
+          <!-- Populated via JS -->
+        </div>
+
+        <div class="admin-modal-footer" style="margin-top: 1.5rem;">
+          <button type="button" class="btn btn-secondary" id="btn-close-answers-bottom">Close</button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- MODAL: ADD / CONFIGURE QUESTION -->
+  <dialog class="admin-modal" id="admin-add-question-modal">
+    <div class="admin-modal-box" style="max-width: 580px;">
+      <div class="admin-modal-header">
+        <h3 id="add-question-modal-title">Configure Form Question</h3>
+        <button type="button" class="btn-close" id="btn-close-add-question-modal">&times;</button>
+      </div>
+      <form id="admin-add-question-form" class="admin-modal-form">
+        <div class="form-group">
+          <label for="aq-label" class="form-label">Question Label / Prompt <span class="required">*</span></label>
+          <input type="text" id="aq-label" class="form-input" required placeholder="e.g. Which topics are you most interested in?">
+        </div>
+
+        <div class="form-row form-grid-2">
+          <div class="form-group">
+            <label for="aq-type" class="form-label">Question Input Type <span class="required">*</span></label>
+            <select id="aq-type" class="form-input" required>
+              <option value="text">Short Text</option>
+              <option value="textarea">Long Text / Paragraph</option>
+              <option value="email">Email Address</option>
+              <option value="tel">Telephone / WhatsApp</option>
+              <option value="radio">Single Choice (Radio Cards)</option>
+              <option value="checkbox">Multiple Choice (Checkboxes)</option>
+              <option value="select">Dropdown Menu</option>
+              <option value="rating">Rating Scale (1 - 5)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="aq-id" class="form-label">Internal Field ID <span class="required">*</span></label>
+            <input type="text" id="aq-id" class="form-input" required placeholder="e.g. q_halal_topics">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="aq-helper" class="form-label">Helper Text / Instructions (Optional)</label>
+          <input type="text" id="aq-helper" class="form-input" placeholder="e.g. Select all options that apply to your goals">
+        </div>
+
+        <div class="form-group" id="aq-options-group" style="display: none;">
+          <label for="aq-options" class="form-label">Options (One per line or comma-separated)</label>
+          <textarea id="aq-options" class="form-input" rows="3" placeholder="Option 1&#10;Option 2&#10;Option 3"></textarea>
+          <label class="checkbox-label" style="margin-top: 6px;">
+            <input type="checkbox" id="aq-allow-other">
+            <span>Include "Other" write-in response option</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="aq-required" checked>
+            <span>Mark this question as required</span>
+          </label>
+        </div>
+
+        <div style="border-top: 1px solid #E5E2DA; padding-top: 10px; margin-top: 10px;">
+          <span style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: #6B6963; display: block; margin-bottom: 6px;">Conditional Display Rule (Optional)</span>
+          <div class="form-row form-grid-2">
+            <div class="form-group">
+              <label for="aq-depends-id" class="form-label">Depends on Question ID</label>
+              <input type="text" id="aq-depends-id" class="form-input" placeholder="e.g. q_giveaway">
+            </div>
+            <div class="form-group">
+              <label for="aq-depends-val" class="form-label">Required Answer Value</label>
+              <input type="text" id="aq-depends-val" class="form-input" placeholder="e.g. Yes">
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-modal-footer">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-add-question">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="btn-submit-add-question">Add to Question Group</button>
         </div>
       </form>
     </div>

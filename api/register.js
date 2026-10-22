@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { prisma, withPrismaRetry } from './_lib/prisma.js';
 import { sendRegistrationConfirmation } from './_lib/mailer.js';
+import { buildFormSchemaForSession, validateSubmittedAnswers } from './_lib/questions.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -13,6 +14,11 @@ export default async function handler(req, res) {
       sessionId,
       fullName,
       email,
+      phone,
+      occupation,
+      organization,
+      state,
+      answers = {},
       // Optional fallback fields for backwards compatibility
       firstName: legacyFirstName,
       lastName: legacyLastName,
@@ -26,8 +32,11 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2. Full Name validation (strictly full name, minimum 2 characters)
+    // 2. Full Name resolution
     let resolvedFullName = typeof fullName === 'string' ? fullName.trim() : '';
+    if (!resolvedFullName && answers && answers.fullName) {
+      resolvedFullName = String(answers.fullName).trim();
+    }
     if (!resolvedFullName && (legacyFirstName || legacyLastName)) {
       resolvedFullName = `${legacyFirstName || ''} ${legacyLastName || ''}`.trim();
     }
@@ -39,8 +48,13 @@ export default async function handler(req, res) {
       });
     }
 
-    // 3. Email validation (valid regex format)
-    if (!email || typeof email !== 'string' || !email.trim()) {
+    // 3. Email resolution & validation
+    let resolvedEmail = typeof email === 'string' ? email.trim() : '';
+    if (!resolvedEmail && answers && answers.email) {
+      resolvedEmail = String(answers.email).trim();
+    }
+
+    if (!resolvedEmail) {
       return res.status(400).json({
         error: 'Missing Email',
         message: 'A valid email address is required.',
@@ -48,7 +62,7 @@ export default async function handler(req, res) {
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const cleanEmail = email.trim().toLowerCase();
+    const cleanEmail = resolvedEmail.toLowerCase();
     if (!emailRegex.test(cleanEmail)) {
       return res.status(400).json({
         error: 'Invalid Email Format',
@@ -56,7 +70,13 @@ export default async function handler(req, res) {
       });
     }
 
-    // Split fullName into firstName and lastName for relational schema compatibility
+    // Resolve phone & other common fields from root or answers
+    const resolvedPhone = phone || (answers && answers.phone) || null;
+    const resolvedOccupation = occupation || (answers && answers.occupation) || null;
+    const resolvedOrg = organization || (answers && answers.organization) || null;
+    const resolvedState = state || (answers && answers.state) || null;
+
+    // Split fullName into firstName and lastName
     const nameParts = resolvedFullName.split(/\s+/);
     const firstName = nameParts[0];
     const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
@@ -103,7 +123,39 @@ export default async function handler(req, res) {
       });
     }
 
-    // 5. Find or Create Participant in PostgreSQL
+    // 5. Dynamic Question Schema Validation
+    const formSchema = await buildFormSchemaForSession(session);
+    const allQuestions = [];
+    for (const step of formSchema.steps) {
+      if (Array.isArray(step.questions)) {
+        allQuestions.push(...step.questions);
+      }
+    }
+
+    // Combine any top-level properties into the answers dictionary for validation
+    const mergedAnswers = {
+      fullName: resolvedFullName,
+      email: cleanEmail,
+      phone: resolvedPhone,
+      occupation: resolvedOccupation,
+      organization: resolvedOrg,
+      state: resolvedState,
+      ...(answers || {}),
+    };
+
+    const validation = validateSubmittedAnswers(allQuestions, mergedAnswers);
+    if (!validation.isValid) {
+      const firstError = Object.values(validation.errors)[0];
+      return res.status(400).json({
+        error: 'Validation Failed',
+        message: firstError || 'Please answer all required questions correctly.',
+        fieldErrors: validation.errors,
+      });
+    }
+
+    const finalCleanedAnswers = validation.cleanedAnswers;
+
+    // 6. Find or Create Participant in PostgreSQL
     let participant = await withPrismaRetry(() =>
       prisma.participant.findUnique({
         where: { email: cleanEmail },
@@ -111,20 +163,21 @@ export default async function handler(req, res) {
     );
 
     if (participant) {
-      // Preserve existing participant's subscription status; update names and record session consent
       participant = await withPrismaRetry(() =>
         prisma.participant.update({
           where: { id: participant.id },
           data: {
             firstName,
             lastName,
+            phone: resolvedPhone || participant.phone,
+            occupation: resolvedOccupation || participant.occupation,
+            organization: resolvedOrg || participant.organization,
+            state: resolvedState || participant.state,
             consentGiven: true,
           },
         })
       );
     } else {
-      // New participant registering for a specific session:
-      // Records essential session communication consent without automatically opting into general marketing
       const unsubscribeToken = crypto.randomBytes(24).toString('hex');
       participant = await withPrismaRetry(() =>
         prisma.participant.create({
@@ -132,16 +185,20 @@ export default async function handler(req, res) {
             firstName,
             lastName,
             email: cleanEmail,
+            phone: resolvedPhone,
+            occupation: resolvedOccupation,
+            organization: resolvedOrg,
+            state: resolvedState,
             country: 'Nigeria',
             consentGiven: true,
-            subscribed: false, // Default to false for session registration
+            subscribed: false,
             unsubscribeToken,
           },
         })
       );
     }
 
-    // 6. Prevent Duplicate Registration
+    // 7. Prevent Duplicate Registration
     const existingRegistration = await withPrismaRetry(() =>
       prisma.registration.findUnique({
         where: {
@@ -160,17 +217,18 @@ export default async function handler(req, res) {
       });
     }
 
-    // 7. Create Session Registration
+    // 8. Create Session Registration with structured answers
     const registration = await withPrismaRetry(() =>
       prisma.registration.create({
         data: {
           participantId: participant.id,
           sessionId: session.id,
+          answers: finalCleanedAnswers,
         },
       })
     );
 
-    // 8. Dispatch Confirmation Email Asynchronously
+    // 9. Dispatch Confirmation Email Asynchronously
     sendRegistrationConfirmation({
       participant,
       session,
@@ -191,6 +249,7 @@ export default async function handler(req, res) {
           fullName: `${participant.firstName} ${participant.lastName}`.trim(),
           email: participant.email,
         },
+        answers: finalCleanedAnswers,
       },
     });
   } catch (error) {
