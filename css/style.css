@@ -297,39 +297,40 @@ h1, h2, h3, h4 {
   max-width: var(--max-width);
   height: 100%;
   margin-inline: auto;
-  padding-inline: var(--space-lg);
+  /* Use clamp so it never crushes content on 320px or wastes space on wide screens */
+  padding-inline: clamp(0.75rem, 4vw, 1.5rem);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-lg);
+  gap: clamp(0.5rem, 2vw, 1.5rem);
 }
 
-/* Clean charcoal logo container for brand logo */
+/* Brand link — transparent logo sits directly on the header background */
 .brand-link {
   display: inline-flex;
   align-items: center;
   text-decoration: none;
+  flex-shrink: 0;
 }
 
+/* Logo badge: no background — transparent PNG no longer needs the charcoal wrapper */
 .logo-badge {
-  background-color: var(--color-charcoal);
-  padding: 6px 14px;
-  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: transform var(--transition-fast), border-color var(--transition-fast);
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
 }
 
 .logo-badge:hover {
   transform: translateY(-1px);
-  border-color: var(--color-yellow);
+  opacity: 0.88;
 }
 
 .brand-logo-img {
+  /* Fluid height: comfortable on desktop, compact on mobile */
+  height: clamp(32px, 5vw, 44px);
   width: auto;
-  height: 38px;
+  max-width: min(180px, 42vw);
   object-fit: contain;
   display: block;
 }
@@ -1562,18 +1563,15 @@ h1, h2, h3, h4 {
 }
 
 .footer-logo-badge {
-  background-color: var(--color-charcoal);
-  padding: 6px 14px;
-  border-radius: var(--radius-sm);
   display: inline-flex;
   align-items: center;
   width: fit-content;
-  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .footer-logo-img {
   width: auto;
-  height: 34px;
+  height: clamp(28px, 4vw, 36px);
+  max-width: min(160px, 50vw);
   object-fit: contain;
 }
 
@@ -1917,7 +1915,7 @@ h1, h2, h3, h4 {
 
 @media (max-width: 768px) {
   :root {
-    --header-height: 70px;
+    --header-height: 64px;
   }
 
   .desktop-nav,
@@ -1927,6 +1925,13 @@ h1, h2, h3, h4 {
 
   .mobile-menu-toggle {
     display: flex;
+    /* Ensure toggle never shrinks below its tap target */
+    flex-shrink: 0;
+  }
+
+  /* Prevent header children from overflowing the viewport */
+  .header-container {
+    overflow: hidden;
   }
 
   /* Force single column so minmax(320px) never exceeds viewport */
@@ -2044,13 +2049,16 @@ h1, h2, h3, h4 {
     font-size: clamp(1.75rem, 8vw, 2.5rem);
   }
 
-  /* Logo badge should scale, not clip */
-  .brand-logo-img {
-    height: 30px;
+  /* On tiny phones the header gap must compress further */
+  .header-container {
+    gap: 0.35rem;
+    padding-inline: 0.625rem;
   }
 
-  .footer-logo-img {
-    height: 28px;
+  /* Hamburger button stays at minimum 40px tap target */
+  .mobile-menu-toggle {
+    width: 40px;
+    height: 40px;
   }
 }
 
